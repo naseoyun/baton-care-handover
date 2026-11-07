@@ -911,7 +911,7 @@ $("sendBtn").onclick=()=>{
   if(!SEL.size){$("sendState").textContent="먼저 시설을 1곳 이상 고르세요.";return;}
   const s=$("selSido").value, g=$("selSgg").value;
   const c={id:CASES.length+1,resume:RESUME,who:RESUME.요약||"돌봄 이력서",from:s+" "+g,need:need(),picks:[...SEL],checks:{q:false,g:false,h:false},entrusted:null,admitted:false,log:[],at:stamp()};
-  c.refs=c.picks.map(fi=>{const r={id:REFS.length+1,fac:fi,caseId:c.id,status:"미회신",reasons:[],note:"",aiNote:null,qs:null}; REFS.push(r); return r;});
+  c.refs=c.picks.map(fi=>{const r={id:REFS.length+1,fac:fi,caseId:c.id,status:"미회신",reasons:[]}; REFS.push(r); return r;});
   logC(c,"보호자",`의뢰서 제출: 시설 ${c.picks.length}곳과 ${c.from} 주민센터에 동시 전달`);
   CASES.push(c); SEL.clear(); renderFacs(); renderLetter(); renderRefStats();
   location.hash="g4";
@@ -956,33 +956,6 @@ function resumeHTML(r){
 }
 
 /* 시설: 들어온 의뢰 */
-async function aiQuestions(r){
-  const c=caseOf(r), f=FAC[r.fac];
-  let qs=null, how="";
-  if(SAMPLE){
-    try{ const o=await SAMPLE.json(`당신은 발달장애인 거주시설의 입소 상담 담당자입니다. 아래 돌봄 이력서만 보고, 입소 상담 때 보호자에게 꼭 물어야 할 질문 5개를 만드세요.
-규칙: 이력서의 '확인_필요'와 도전행동의 '모름' 항목을 먼저 다루고, 우리 시설 유형(${TYPE_NAME[f.type]})에서 안전하게 돌보는 데 필요한 것을 물으세요. 이력서에 없는 사실을 전제하지 마세요. 존중하는 말투로 쓰세요.
-JSON 형식으로만 답하세요: {"질문":[{"질문":"","이유":""}]}
-돌봄 이력서: ${JSON.stringify(c.resume)}`,{modelTier:"default"}); if(o&&Array.isArray(o.질문)){qs=o.질문; how="AI";} }catch(e){ qs=null; }
-  }
-  if(!qs){ qs=(c.resume.확인_필요||[]).map(x=>({질문:x.replace(/[.]$/,"")+"에 대해 알려 주실 수 있나요?",이유:"이력서에 '확인 필요'로 남은 항목"})); how="서식"; }
-  r.qs={how,list:qs};
-}
-async function aiReason(r){
-  const text=r.note.trim(); if(!text) return;
-  let codes=null, how="";
-  if(SAMPLE){
-    try{ const o=await SAMPLE.json(`시설이 발달장애인 입소 의뢰를 거절하며 적은 사유를 아래 코드로 분류하세요. 해당하는 코드를 모두 고르고, 문장에 근거가 없는 코드는 고르지 마세요.
-코드: ${REASONS.join(", ")}
-JSON 형식으로만 답하세요: {"코드":[""],"요약":"한 문장"}
-사유: """${text}"""`,{modelTier:"default"}); if(o&&Array.isArray(o.코드)){codes=o.코드.filter(x=>REASONS.includes(x)); how="AI"; r.aiNote=o.요약||"";} }catch(e){ codes=null; }
-  }
-  if(!codes){
-    const k=[["종사자 부족",/인력|종사자|교사|선생님|사람이 부족/],["도전행동 대응 어려움",/자해|타해|도전|공격|행동/],["의료 처치 불가",/의료|간호|발작|간질|처치/],["성별·생활공간 문제",/성별|남성|여성|방|공간/],["정원 없음",/정원|자리가|만실|빈자리/]];
-    codes=k.filter(([,re])=>re.test(text)).map(([c])=>c); if(!codes.length) codes=["기타"]; how="키워드";
-  }
-  r.reasons=[...new Set([...r.reasons,...codes])]; r.aiHow=how;
-}
 function renderInbox(){
   const open=REFS.filter(r=>r.status==="미회신").length;
   $("inboxCount").textContent=REFS.length?`${REFS.length}건 · 회신 전 ${open}건`:"";
@@ -994,22 +967,17 @@ function renderInbox(){
     if(entrusted) act=c.admitted?`<div class="note okn">입소 완료를 보고했습니다. 시군구와 보호자 화면에 반영됐습니다.</div>`:`<div class="entrust"><span><b>시군구 위탁 결정이 도착했습니다.</b> 위탁받은 보장시설은 정당한 사유 없이 거부할 수 없습니다(국민기초생활 보장법 제33조, 사업안내 323쪽).</span><button class="btn sm" data-admit="${r.id}" type="button">입소 완료 보고</button></div>`;
     else if(other) act=`<div class="src">다른 시설로 위탁이 결정됐습니다.</div>`;
     else act=`<div class="btns"><span class="src">회신</span><button class="btn sm ${r.status==="수용"?"":"ghost"}" data-st="수용" data-r="${r.id}" type="button">수용 가능</button><button class="btn sm ${r.status==="대기"?"":"ghost"}" data-st="대기" data-r="${r.id}" type="button">대기 등록</button><button class="btn sm ${r.status==="거절"?"":"ghost"}" data-st="거절" data-r="${r.id}" type="button">거절</button></div>
-      ${r.status==="거절"?`<div class="rjbox"><label class="f" for="rn${r.id}">거절 사유를 적어 주세요(필수)</label><textarea id="rn${r.id}" data-note="${r.id}" style="min-height:70px">${esc(r.note)}</textarea><div class="btns" style="margin-top:8px"><button class="btn sm" data-classify="${r.id}" type="button">AI로 사유 분류</button><span class="src">${r.aiHow?`${r.aiHow==="AI"?"AI 분류":"키워드 분류(AI 미연결)"} 결과를 확인하고 고치세요`:"적은 문장을 표준 사유 코드로 바꿔 관할 통계에 쌓습니다"}</span></div>
-        <div class="reasons" style="margin-top:8px">${REASONS.map(x=>`<button type="button" aria-pressed="${r.reasons.includes(x)}" data-rs="${x}" data-r="${r.id}">${x}</button>`).join("")}</div>${r.aiNote?`<div class="src" style="margin-top:6px">AI 요약: ${esc(r.aiNote)}</div>`:""}</div>`:""}`;
+      ${r.status==="거절"?`<div class="rjbox"><div class="f" style="margin-bottom:6px">거절 사유(필수, 여러 개 선택)</div><div class="reasons">${REASONS.map(x=>`<button type="button" aria-pressed="${r.reasons.includes(x)}" data-rs="${x}" data-r="${r.id}">${x}</button>`).join("")}</div></div>`:""}`;
     return `<div class="refitem">
       <div class="top"><div><b>${esc(nm(f.i))}</b> <span class="src">${TYPE_NAME[f.type]} · 정원 ${f.cap} · 현원 ${f.cur}</span></div><span class="pill ${ST_CLS[r.status]}">${ST_LABEL[r.status]}</span></div>
       <div class="src">의뢰 #${c.id} · 접수 ${c.at} · 보호자 거주지 ${esc(c.from)} · ${NEED_LABEL[c.need]}${capM.length?` · 우리 시설 등록 항목과 ${capM.length}개 일치`:""}</div>
       <div>${esc(c.who)}</div>
       <details><summary>돌봄 이력서 보기</summary><div class="resume" style="margin-top:10px">${resumeHTML(c.resume)}</div></details>
-      <details ${r.qs?"open":""}><summary>입소 상담 질문 만들기</summary><div style="margin-top:8px">${r.qs?`<ol class="tight">${r.qs.list.map(q=>`<li><b>${esc(q.질문)}</b><div class="src">${esc(q.이유||"")}</div></li>`).join("")}</ol><div class="src">${r.qs.how==="AI"?"AI가 이력서를 보고 만든 질문입니다.":"AI 미연결: 이력서의 ‘확인 필요’ 항목으로 만든 질문입니다."}</div>`:`<button class="btn sm ghost" data-qs="${r.id}" type="button">이력서로 상담 질문 만들기</button>`}</div></details>
       ${act}
     </div>`}).join("");
   const R=id=>REFS.find(x=>x.id===+id);
-  document.querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{const r=R(b.dataset.r); r.status=b.dataset.st; if(r.status!=="거절"){r.reasons=[];r.note="";r.aiNote=null;r.aiHow=null;} logC(caseOf(r),"시설",`${nm(r.fac)}: ${ST_LABEL[r.status]} 회신`); renderInbox(); renderRefStats();});
-  document.querySelectorAll("[data-rs]").forEach(b=>b.onclick=()=>{const r=R(b.dataset.r); const x=b.dataset.rs; r.reasons=r.reasons.includes(x)?r.reasons.filter(y=>y!==x):[...r.reasons,x]; renderInbox(); renderRefStats();});
-  document.querySelectorAll("[data-note]").forEach(t=>t.oninput=()=>{R(t.dataset.note).note=t.value;});
-  document.querySelectorAll("[data-classify]").forEach(b=>b.onclick=async()=>{const r=R(b.dataset.classify); b.disabled=true; b.innerHTML='<span class="spin"></span> 분류 중'; await aiReason(r); logC(caseOf(r),"시설",`${nm(r.fac)}: 거절 사유 ${r.reasons.join(", ")}`); renderInbox(); renderRefStats();});
-  document.querySelectorAll("[data-qs]").forEach(b=>b.onclick=async()=>{const r=R(b.dataset.qs); b.disabled=true; b.innerHTML='<span class="spin"></span> 만드는 중'; await aiQuestions(r); renderInbox();});
+  document.querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{const r=R(b.dataset.r); r.status=b.dataset.st; if(r.status!=="거절") r.reasons=[]; logC(caseOf(r),"시설",`${nm(r.fac)}: ${ST_LABEL[r.status]} 회신`); renderInbox(); renderRefStats();});
+  document.querySelectorAll("[data-rs]").forEach(b=>b.onclick=()=>{const r=R(b.dataset.r); const x=b.dataset.rs; r.reasons=r.reasons.includes(x)?r.reasons.filter(y=>y!==x):[...r.reasons,x]; if(r.reasons.includes(x)) logC(caseOf(r),"시설",`${nm(r.fac)}: 거절 사유 ${x}`); renderInbox(); renderRefStats();});
   document.querySelectorAll("[data-admit]").forEach(b=>b.onclick=()=>{const r=R(b.dataset.admit), c=caseOf(r); c.admitted=true; logC(c,"시설",`${nm(r.fac)}: 입소 완료 보고`); renderInbox();});
   if(typeof renderNav==="function") renderNav("facility");
 }
