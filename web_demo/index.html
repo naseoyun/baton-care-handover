@@ -1011,6 +1011,7 @@ function renderInbox(){
   document.querySelectorAll("[data-classify]").forEach(b=>b.onclick=async()=>{const r=R(b.dataset.classify); b.disabled=true; b.innerHTML='<span class="spin"></span> 분류 중'; await aiReason(r); logC(caseOf(r),"시설",`${nm(r.fac)}: 거절 사유 ${r.reasons.join(", ")}`); renderInbox(); renderRefStats();});
   document.querySelectorAll("[data-qs]").forEach(b=>b.onclick=async()=>{const r=R(b.dataset.qs); b.disabled=true; b.innerHTML='<span class="spin"></span> 만드는 중'; await aiQuestions(r); renderInbox();});
   document.querySelectorAll("[data-admit]").forEach(b=>b.onclick=()=>{const r=R(b.dataset.admit), c=caseOf(r); c.admitted=true; logC(c,"시설",`${nm(r.fac)}: 입소 완료 보고`); renderInbox();});
+  if(typeof renderNav==="function") renderNav("facility");
 }
 
 /* 시설: 우리 시설 정보 */
@@ -1058,6 +1059,7 @@ function renderCases(){
   document.querySelectorAll("[data-ck]").forEach(x=>x.onchange=()=>{const [id,k]=x.dataset.ck.split(":"); const c=CASES.find(c=>c.id===+id); c.checks[k]=x.checked; if(x.checked) logC(c,"시군구",`${CHECKS.find(z=>z[0]===k)[1]} 확인`); renderCases();});
   document.querySelectorAll("[data-pk]").forEach(x=>x.onchange=()=>{const [id,fi]=x.dataset.pk.split(":"); PICK[+id]=+fi;});
   document.querySelectorAll("[data-ent]").forEach(b=>b.onclick=()=>{const c=CASES.find(c=>c.id===+b.dataset.ent); const ok=c.refs.filter(r=>r.status==="수용"); const fi=PICK[c.id]??ok[0].fac; c.entrusted=fi; logC(c,"시군구",`${nm(fi)}에 위탁 결정 통보`); renderCases();});
+  if(typeof renderNav==="function") renderNav("cases");
 }
 
 function renderRefStats(){
