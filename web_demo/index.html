@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>바톤 돌봄 인계</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* 토큰: 범정부 UI/UX 디자인 시스템(KRDS) 기본 모드 색에 맞춤. 서체는 KRDS 기본 서체(Pretendard GOV)가 설치돼 있으면 쓰고, 없으면 그 바탕인 Noto Sans KR. 정부24·복지로와 같은 계열의 화면으로 보이도록 */
+:root{
+  --p50:#256EF4; --p60:#0B50D0; --p70:#083891; --p5:#ECF2FE; --p10:#D8E5FD;
+  --ink:#1E2124; --ink2:#464C53; --muted:#6D7882; --line:#CDD1D5; --line2:#E6E8EA;
+  --bg:#F4F5F6; --card:#FFFFFF; --tint:#EEF2F7;
+  --accent:var(--p50); --accent-ink:#fff; --accent-soft:var(--p5);
+  --relay:var(--p60); --relay-soft:var(--p5);
+  --ok:#228738; --ok-soft:#EAF6EC; --warn:#9E6A00; --warn-soft:#FFF6E0; --bad:#D63D2B; --bad-soft:#FDEFEC;
+  --paper:var(--bg);
+  --font-display:"Pretendard GOV","Pretendard","Noto Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --font-body:var(--font-display); --font-num:var(--font-display);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6;letter-spacing:-.005em;-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.02em;text-wrap:balance}
+a{color:var(--p60);text-underline-offset:3px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--p50);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.in{max-width:1200px;margin:0 auto;padding:0 24px}
+@media (max-width:700px){.in{padding:0 16px}}
+
+/* 상단: 시제품 안내 띠 + 헤더 + 주 메뉴 */
+.govbar{background:var(--tint);font-size:13px;color:var(--ink2)}
+.govbar .in{padding-top:7px;padding-bottom:7px}
+header.top{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header.top .in{display:flex;align-items:center;gap:32px;min-height:72px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);flex:none}
+.brand b{font-size:22px;letter-spacing:-.03em}
+.brand small{display:block;font-size:12.5px;color:var(--muted);line-height:1.2;font-weight:500}
+.mark{width:36px;height:36px;border-radius:8px;background:var(--p60);display:grid;place-items:center;flex:none}
+nav.gnb{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-left:auto}
+nav.gnb a{display:block;padding:24px 12px 22px;font-size:16.5px;font-weight:600;color:var(--ink);text-decoration:none;white-space:nowrap;border-bottom:3px solid transparent}
+nav.gnb a:hover{color:var(--p60)}
+nav.gnb a[aria-current="page"]{color:var(--p60);border-bottom-color:var(--p60)}
+nav.gnb .sep{width:1px;background:var(--line2);margin:24px 6px}
+@media (max-width:980px){header.top .in{flex-wrap:wrap;gap:0;padding-top:10px}nav.gnb{margin-left:0;width:100%}nav.gnb a{padding:10px 10px 12px;font-size:15px}nav.gnb .sep{margin:10px 4px}}
+
+/* 화면 머리(브레드크럼 + 제목) */
+.phead{background:#fff;border-bottom:1px solid var(--line2)}
+.phead .in{padding-top:22px;padding-bottom:24px}
+.crumb{font-size:13.5px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.crumb a{color:var(--muted);text-decoration:none}
+.crumb span::before{content:"";display:inline-block;width:6px;height:6px;border-right:1.5px solid var(--muted);border-top:1.5px solid var(--muted);transform:rotate(45deg);margin:0 8px 2px 0}
+.phead h1{font-size:30px;margin-top:6px}
+.phead p{margin:6px 0 0;color:var(--ink2);max-width:70ch}
+
+.view{display:none}.view.on{display:block}
+[id]{scroll-margin-top:96px}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 24px 64px;display:grid;gap:20px}
+@media (max-width:700px){.wrap{padding:16px 16px 48px}}
+.card{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:24px;min-width:0}
+@media (max-width:700px){.card{padding:18px}}
+.card h2{font-size:20px;margin-bottom:6px}
+.card h3{font-size:16px}
+.sub{color:var(--ink2);font-size:14.5px;margin:0 0 16px}
+.grid2{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:20px}
+.grid2e{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:980px){.grid2,.grid2e{grid-template-columns:1fr}}
+
+/* 홈 */
+.hero{background:#fff;border-bottom:1px solid var(--line2)}
+.hero .in{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:48px;align-items:center;padding-top:48px;padding-bottom:48px}
+.hero h1{font-size:40px;line-height:1.3;letter-spacing:-.035em}
+.hero .lead{font-size:18px;color:var(--ink2);margin:16px 0 0;max-width:34em}
+.hero .who{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}
+.hero .who a{border:1px solid var(--line);border-radius:6px;padding:9px 14px;font-weight:600;font-size:15px;color:var(--ink);text-decoration:none;background:#fff}
+.hero .who a:hover{border-color:var(--p60);color:var(--p60)}
+.finder{border:2px solid var(--p50);border-radius:12px;padding:24px;display:grid;gap:14px;background:#fff}
+.finder h2{font-size:20px}
+.finder .row{grid-template-columns:1fr 1fr}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg label{display:grid;place-items:center;text-align:center;padding:10px 6px;font-size:14.5px;cursor:pointer;border-left:1px solid var(--line);line-height:1.35}
+.seg label:first-child{border-left:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:var(--p60);color:#fff;font-weight:600}
+.seg label:has(input:focus-visible){outline:3px solid var(--p50);outline-offset:-3px}
+@media (max-width:980px){.hero .in{grid-template-columns:1fr;gap:28px;padding-top:32px;padding-bottom:32px}.hero h1{font-size:30px}}
+.wrap>section+section,.wrap>section+.notice{margin-top:12px}
+.sechead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px}
+.sechead h2{font-size:22px}
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media (max-width:980px){.roles{grid-template-columns:1fr}}
+.role{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:22px 24px}
+.role h3{font-size:19px}
+.role p{margin:4px 0 12px;color:var(--ink2);font-size:14.5px}
+.role ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line2)}
+.role li a{display:flex;justify-content:space-between;align-items:center;padding:13px 2px;border-bottom:1px solid var(--line2);color:var(--ink);text-decoration:none;font-weight:500}
+.role li a::after{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:rotate(45deg);flex:none;margin-right:4px}
+.role li a:hover{color:var(--p60)}
+.role li a:hover::after{border-color:var(--p60)}
+.howto{display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:#fff;border:1px solid var(--line2);border-radius:8px;list-style:none;margin:0;padding:0;counter-reset:h}
+.howto li{padding:22px 22px 24px;border-left:1px solid var(--line2);counter-increment:h}
+.howto li:first-child{border-left:0}
+.howto li::before{content:counter(h)"단계";display:block;color:var(--p60);font-weight:700;font-size:14px;margin-bottom:6px}
+.howto b{display:block;font-size:17px}
+.howto span{display:block;color:var(--ink2);font-size:14px;margin-top:4px}
+.howto em{font-style:normal;display:inline-block;margin-top:10px;font-size:13px;color:var(--muted)}
+@media (max-width:980px){.howto{grid-template-columns:1fr 1fr}.howto li:nth-child(3){border-left:0}.howto li:nth-child(n+3){border-top:1px solid var(--line2)}}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border:1px solid var(--line2);border-radius:8px}
+.stats div{padding:20px 22px;border-left:1px solid var(--line2)}
+.stats div:first-child{border-left:0}
+.stats b{display:block;font-size:28px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stats div>span{font-size:14px;color:var(--ink2)}
+@media (max-width:980px){.stats{grid-template-columns:1fr 1fr}.stats div:nth-child(3){border-left:0}.stats div:nth-child(n+3){border-top:1px solid var(--line2)}}
+.notice{border:1px solid var(--line2);background:#fff;border-radius:8px;padding:18px 22px;font-size:14px;color:var(--ink2)}
+.notice b{color:var(--ink)}
+
+/* 단계 표시 */
+.steps-head{display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid var(--line2)}
+.stepchip{font-size:14px;padding:0 14px 10px 0;margin-right:14px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.stepchip.on{color:var(--p60);font-weight:700;border-bottom-color:var(--p60)}
+
+/* 입력 */
+label.f{display:grid;gap:6px;font-size:14.5px;color:var(--ink);font-weight:600}
+input[type=number],input[type=text],select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font-weight:400;font-size:15.5px}
+select{height:48px}
+input:hover,select:hover,textarea:hover{border-color:var(--ink2)}
+textarea{min-height:200px;resize:vertical;line-height:1.65}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--p50);background:var(--p50);color:#fff;height:48px;padding:0 20px;border-radius:6px;cursor:pointer;font-weight:700;font-size:16px}
+.btn:hover{background:var(--p60);border-color:var(--p60)}
+.btn.ghost{background:#fff;color:var(--p60);border-color:var(--p60)}
+.btn.ghost:hover{background:var(--p5)}
+.btn.relay{background:var(--p60);border-color:var(--p60)}
+.btn.sm{height:36px;padding:0 12px;font-size:14px}
+.btn.lg{height:56px;font-size:17px;width:100%}
+.btn:disabled{opacity:.5;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.radio{display:flex;gap:8px;flex-wrap:wrap}
+.radio label{border:1px solid var(--line);border-radius:6px;padding:10px 14px;cursor:pointer;font-size:15px;display:flex;gap:8px;align-items:center;background:#fff;font-weight:500}
+.radio input{accent-color:var(--p60);width:18px;height:18px;margin:0}
+.radio label:has(input:checked){border-color:var(--p60);background:var(--p5);color:var(--p70);font-weight:600}
+.check{display:flex;gap:8px;align-items:center;font-size:14.5px}
+.check input{accent-color:var(--p60);width:18px;height:18px;margin:0}
+
+/* 상태 표시(배지) */
+.pill{display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;padding:2px 7px;border-radius:4px;background:#F1F2F3;color:var(--ink2);white-space:nowrap;line-height:1.5}
+.pill.ok{color:var(--ok);background:var(--ok-soft)}
+.pill.warn{color:var(--warn);background:var(--warn-soft)}
+.pill.bad{color:var(--bad);background:var(--bad-soft)}
+.pill.acc,.pill.relay{color:var(--p60);background:var(--p5)}
+.src{font-size:13px;color:var(--muted)}
+.note{font-size:14px;color:var(--ink2);background:var(--tint);border-radius:6px;padding:12px 14px;margin:14px 0 0}
+.empty{border:1px dashed var(--line);border-radius:8px;padding:22px;color:var(--muted);font-size:14.5px;text-align:center;background:#fff}
+
+/* 이력서 */
+.resume{display:grid;gap:12px}
+.resume .sec{border:1px solid var(--line2);border-radius:6px;padding:14px 16px}
+.resume .sec h3{font-size:15px;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.beh{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14.5px}
+.beh dt{color:var(--muted)}
+.beh dd{margin:0}
+.behitem{border-left:3px solid var(--p50);padding:8px 12px;margin:8px 0;background:var(--tint)}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:4px 12px;font-size:14.5px}
+.kv span:nth-child(odd){color:var(--muted)}
+ul.tight{margin:4px 0 0;padding-left:20px}
+ul.tight li{margin:4px 0}
+
+/* 돌봄 경로 */
+.path{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line2);border-radius:6px;overflow:hidden}
+@media (max-width:860px){.path{grid-template-columns:1fr 1fr}}
+.stage{padding:16px;border-left:1px solid var(--line2);background:#fff}
+.stage:first-child{border-left:0}
+.stage .t{font-size:13px;color:var(--muted)}
+.stage .h{font-weight:700;font-size:16px;margin:2px 0 6px}
+.stage .n{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.stage.gap{background:var(--bad-soft)}
+.stage.gap .n{color:var(--bad)}
+.facs{display:grid;border-top:1px solid var(--ink)}
+.fac{border-bottom:1px solid var(--line2);padding:16px 4px;display:grid;grid-template-columns:1fr auto;gap:6px 16px;align-items:start}
+.fac .nm{font-weight:700;font-size:16.5px}
+.fac .meta{font-size:13.5px;color:var(--muted)}
+.fac .chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.fac .score{text-align:right;font-size:13px;color:var(--muted)}
+.fac .score b{display:block;font-size:20px;color:var(--ink)}
+.fac.sel{background:var(--p5);box-shadow:inset 3px 0 0 var(--p60)}
+.bar{height:8px;border-radius:4px;background:var(--line2);overflow:hidden;position:relative;margin-top:6px;width:140px}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--p50)}
+
+/* 표: 정부 누리집 게시판형(위 굵은 선) */
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14.5px;border-top:2px solid var(--ink)}
+th,td{padding:10px 10px;border-bottom:1px solid var(--line2);text-align:left;vertical-align:top}
+th{font-size:14px;color:var(--ink);font-weight:700;white-space:nowrap;background:#F8F9FA}
+td.r,th.r{text-align:right}
+tr.hl td{background:var(--p5)}
+
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border:1px solid var(--line2);border-radius:8px}
+@media (max-width:980px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{padding:18px 20px;border-left:1px solid var(--line2)}
+.tile:first-child{border-left:0}
+@media (max-width:980px){.tile{border-left:0;border-top:1px solid var(--line2)}}
+.tile .v{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tile .k{font-size:14px;color:var(--ink2);font-weight:600}
+.tile.alert .v{color:var(--bad)}
+svg text{font-family:var(--font-body);fill:var(--muted);font-size:12px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink2);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+.ref{display:grid;gap:12px}
+.refitem{border:1px solid var(--line2);border-radius:6px;padding:16px;display:grid;gap:10px}
+.refitem .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.reasons{display:flex;gap:6px;flex-wrap:wrap}
+.reasons button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:6px 12px;font-size:14px;cursor:pointer}
+.reasons button[aria-pressed="true"]{border-color:var(--bad);color:var(--bad);background:var(--bad-soft);font-weight:600}
+ol.flow{list-style:none;margin:0;padding:0;display:grid;gap:14px;counter-reset:f}
+ol.flow li{counter-increment:f;display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:start;font-size:15px}
+ol.flow li::before{content:counter(f);width:28px;height:28px;border-radius:50%;border:1.5px solid var(--p60);color:var(--p60);display:grid;place-items:center;font-weight:700;font-size:14px}
+ol.flow li.baton::before{background:var(--p60);color:#fff}
+ol.flow li b{display:block}
+ol.flow li .src{display:block}
+ol.plan{margin:6px 0 10px;padding-left:22px;display:grid;gap:10px;font-size:15px}
+ol.plan b{margin-right:6px}
+pre.rpt{max-height:560px;font-size:15px;line-height:1.8}
+td .pill{margin-right:4px}
+pre.letter{white-space:pre-wrap;font-family:var(--font-body);font-size:14.5px;background:#F8F9FA;border:1px solid var(--line2);border-radius:6px;padding:16px;margin:0;max-height:440px;overflow:auto}
+.formula{background:#F8F9FA;border:1px solid var(--line2);border-radius:6px;padding:14px 16px;font-size:14.5px;line-height:1.8}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cmp .box{border:1px solid var(--line2);border-radius:6px;padding:14px}
+.cmp .box .v{font-size:22px;font-weight:700}
+.cmp .box.new{border-color:var(--p60);background:var(--p5)}
+.cmp .box.new .v{color:var(--p60)}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp 1s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+footer.foot{background:#fff;border-top:1px solid var(--line);margin-top:24px}
+footer.foot .in{padding-top:24px;padding-bottom:32px;font-size:13.5px;color:var(--ink2);display:grid;gap:6px}
+footer.foot b{color:var(--ink);font-size:15px}
+
+/* 홈: 소개 + 역할 선택 */
+.hero2{grid-template-columns:minmax(0,1fr) 420px!important}
+.ills{list-style:none;margin:28px 0 0;padding:0;display:grid;gap:18px;max-width:600px}
+.ills li{display:grid;grid-template-columns:64px 1fr;gap:18px;align-items:center}
+.ills p{margin:0;font-size:17px;color:var(--ink2);line-height:1.55}
+.rolebox{border:1px solid var(--line);border-radius:12px;padding:24px;background:#fff;display:grid;gap:10px;align-self:start}
+.rolebox h2{font-size:21px}
+.rolebtn{display:grid;grid-template-columns:44px 1fr 12px;gap:14px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:14px 16px;text-decoration:none;color:var(--ink);background:#fff}
+.rolebtn:hover{border-color:var(--p60);background:var(--p5)}
+.rolebtn b{display:block;font-size:17px}
+.rolebtn>span>span{font-size:14px;color:var(--ink2)}
+.rolebtn::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:rotate(45deg)}
+@media (max-width:980px){.hero2{grid-template-columns:1fr!important}}
+.rolesw{display:flex;gap:10px;align-items:center;font-size:13.5px;color:var(--ink2);flex:none}
+.rolesw span{background:var(--p5);color:var(--p70);font-weight:700;border-radius:4px;padding:3px 8px}
+.rolesw a{color:var(--ink2)}
+@media (max-width:980px){.rolesw{order:-1;margin-left:auto}}
+nav.gnb .no{font-style:normal;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;font-size:12px;margin-right:6px;vertical-align:1px}
+nav.gnb .cnt{font-style:normal;display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font-size:12px;line-height:18px;text-align:center;margin-left:5px;vertical-align:2px}
+.nextbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line2);border-radius:8px;padding:14px 18px}
+/* 진행 상황 */
+.track{display:grid;grid-template-columns:1fr 1.2fr 1fr 1fr;gap:10px;margin-top:6px}
+.tcol{display:grid;gap:8px;align-content:start;position:relative}
+.tcol.par{border:1px dashed var(--line);border-radius:8px;padding:22px 8px 8px}
+.tcol.par em{position:absolute;top:4px;left:10px;font-style:normal;font-size:12px;color:var(--p60);font-weight:700}
+.tstep{border:1px solid var(--line2);border-radius:8px;padding:12px 14px;background:#fff;border-top:3px solid var(--line)}
+.tstep b{display:block;font-size:15.5px}
+.tstep span{font-size:13.5px;color:var(--ink2)}
+.tstep.done{border-top-color:var(--ok)}
+.tstep.done b::before{content:"✓ ";color:var(--ok)}
+.tstep.now{border-top-color:var(--p50);background:var(--p5)}
+.tstep.todo{color:var(--muted)}
+@media (max-width:860px){.track{grid-template-columns:1fr}}
+ol.logl{list-style:none;margin:0;padding:0;display:grid;gap:0}
+ol.logl li{display:grid;grid-template-columns:86px 56px 1fr;gap:8px;padding:9px 0;border-bottom:1px solid var(--line2);font-size:14px}
+ol.logl b{color:var(--p60)}
+.entrust{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--p5);border:1px solid var(--p10);border-radius:6px;padding:12px 14px;font-size:14.5px}
+.note.okn{background:var(--ok-soft);color:var(--ink)}
+.rjbox{border:1px solid var(--line2);border-radius:6px;padding:12px;background:#FAFBFC}
+.caps{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.capitem{border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.capitem:has(input:checked){border-color:var(--p60);background:var(--p5)}
+.chk{display:grid;gap:8px}
+.chkitem{align-items:flex-start;border:1px solid var(--line2);border-radius:6px;padding:10px 12px}
+.chkitem input{margin-top:3px}
+.chkitem b{display:block;font-size:14.5px}
+.chkitem .src{display:block}
+.chkitem:has(input:checked){background:var(--ok-soft);border-color:#BFE3C6}
+details>summary{cursor:pointer;color:var(--p60);font-weight:600;font-size:14.5px;padding:4px 0}
+</style>
+</head>
+<body>
+<div class="govbar"><div class="in">이 누리집은 「2026 사회보장 데이터 활용 AI 혁신 아이디어 경진대회」 출품 시제품입니다. 의뢰를 보내도 실제 기관에 접수되지 않습니다.</div></div>
+<header class="top"><div class="in">
+  <a class="brand" href="#home" aria-label="바톤 홈">
+    <span class="mark" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="10" width="11" height="4" rx="2" transform="rotate(-35 8 12)" fill="#ffffff" opacity=".55"/><rect x="10.5" y="10" width="11" height="4" rx="2" transform="rotate(-35 16 12)" fill="#ffffff"/></svg></span>
+    <span><b>바톤</b><small>발달장애인 돌봄 인계</small></span>
+  </a>
+  <nav class="gnb views" id="gnb" aria-label="주 메뉴"></nav>
+  <div class="rolesw" id="roleSw"></div>
+</div></header>
+
+<!-- ================= 홈 ================= -->
+<section class="view" id="v-home">
+<div class="hero"><div class="in hero2">
+  <div>
+    <h1>돌볼 수 없게 되는 날,<br>돌봄으로 이어 드립니다</h1>
+    <ul class="ills">
+      <li><svg class="ill" width="64" height="64" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="36" fill="#ECF2FE"/><circle cx="25" cy="25" r="7" fill="#8FB2F9"/><path d="M12 54c0-9 5.8-16 13-16s13 7 13 16z" fill="#8FB2F9"/><circle cx="43" cy="29" r="6" fill="#0B50D0"/><path d="M33 56c0-8 4.5-14 10-14s10 6 10 14z" fill="#0B50D0"/><rect x="46" y="14" width="16" height="20" rx="2.5" fill="#fff" stroke="#0B50D0" stroke-width="1.6"/><path d="M50 20h8M50 24h8M50 28h5" stroke="#0B50D0" stroke-width="1.6" stroke-linecap="round"/></svg><p>발달장애인의 돌봄 정보를 한 장의 이력서로 정리하고, 가까운 시설에 주민센터를 거쳐 한 번에 의뢰할 수 있어요.</p></li>
+      <li><svg class="ill" width="64" height="64" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="36" fill="#ECF2FE"/><path d="M13 33L32 18l19 15" fill="none" stroke="#0B50D0" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><rect x="17" y="31" width="30" height="24" fill="#8FB2F9"/><rect x="28" y="42" width="8" height="13" rx="1" fill="#0B50D0"/><rect x="20" y="36" width="6" height="6" rx="1" fill="#fff"/><rect x="38" y="36" width="6" height="6" rx="1" fill="#fff"/><path d="M47 14h14a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-7l-5 4v-4h-2a3 3 0 0 1-3-3v-9a3 3 0 0 1 3-3z" fill="#0B50D0"/><path d="M50 21.5l3 3 5.5-6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><p>시설은 지원서를 확인해 회신할 수 있어요.</p></li>
+      <li><svg class="ill" width="64" height="64" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="36" fill="#ECF2FE"/><path d="M12 27L32 16l20 11z" fill="#0B50D0"/><rect x="14" y="27" width="36" height="3" fill="#0B50D0"/><rect x="17" y="31" width="4" height="18" fill="#8FB2F9"/><rect x="25" y="31" width="4" height="18" fill="#8FB2F9"/><rect x="35" y="31" width="4" height="18" fill="#8FB2F9"/><rect x="43" y="31" width="4" height="18" fill="#8FB2F9"/><rect x="12" y="49" width="40" height="4" fill="#0B50D0"/><rect x="45" y="40" width="18" height="17" rx="2.5" fill="#fff" stroke="#0B50D0" stroke-width="1.6"/><rect x="49" y="48" width="3" height="6" fill="#0B50D0"/><rect x="53.5" y="44" width="3" height="10" fill="#8FB2F9"/><rect x="58" y="46" width="3" height="8" fill="#0B50D0"/></svg><p>시군구는 내부 로그를 통해 관할의 돌봄 공백을 확인해 관련 대책을 세울 수 있어요.</p></li>
+    </ul>
+  </div>
+  <div class="rolebox" role="group" aria-labelledby="roleTitle">
+    <h2 id="roleTitle">어떤 분이신가요?</h2>
+    <p class="src" style="margin:0 0 4px;font-size:14.5px">고르시면 그에 맞는 화면으로 이어집니다.</p>
+    <a class="rolebtn" href="#g1"><svg class="ill" width="44" height="44" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="36" fill="#ECF2FE"/><circle cx="25" cy="25" r="7" fill="#8FB2F9"/><path d="M12 54c0-9 5.8-16 13-16s13 7 13 16z" fill="#8FB2F9"/><circle cx="43" cy="29" r="6" fill="#0B50D0"/><path d="M33 56c0-8 4.5-14 10-14s10 6 10 14z" fill="#0B50D0"/><rect x="46" y="14" width="16" height="20" rx="2.5" fill="#fff" stroke="#0B50D0" stroke-width="1.6"/><path d="M50 20h8M50 24h8M50 28h5" stroke="#0B50D0" stroke-width="1.6" stroke-linecap="round"/></svg><span><b>발달장애인 보호자</b><span>돌봄 이력서를 쓰고 시설에 의뢰해요</span></span></a>
+    <a class="rolebtn" href="#facility"><svg class="ill" width="44" height="44" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="36" fill="#ECF2FE"/><path d="M13 33L32 18l19 15" fill="none" stroke="#0B50D0" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><rect x="17" y="31" width="30" height="24" fill="#8FB2F9"/><rect x="28" y="42" width="8" height="13" rx="1" fill="#0B50D0"/><rect x="20" y="36" width="6" height="6" rx="1" fill="#fff"/><rect x="38" y="36" width="6" height="6" rx="1" fill="#fff"/><path d="M47 14h14a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-7l-5 4v-4h-2a3 3 0 0 1-3-3v-9a3 3 0 0 1 3-3z" fill="#0B50D0"/><path d="M50 21.5l3 3 5.5-6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>시설 담당자</b><span>들어온 의뢰를 보고 회신해요</span></span></a>
+    <a class="rolebtn" href="#cases"><svg class="ill" width="44" height="44" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="36" fill="#ECF2FE"/><path d="M12 27L32 16l20 11z" fill="#0B50D0"/><rect x="14" y="27" width="36" height="3" fill="#0B50D0"/><rect x="17" y="31" width="4" height="18" fill="#8FB2F9"/><rect x="25" y="31" width="4" height="18" fill="#8FB2F9"/><rect x="35" y="31" width="4" height="18" fill="#8FB2F9"/><rect x="43" y="31" width="4" height="18" fill="#8FB2F9"/><rect x="12" y="49" width="40" height="4" fill="#0B50D0"/><rect x="45" y="40" width="18" height="17" rx="2.5" fill="#fff" stroke="#0B50D0" stroke-width="1.6"/><rect x="49" y="48" width="3" height="6" fill="#0B50D0"/><rect x="53.5" y="44" width="3" height="10" fill="#8FB2F9"/><rect x="58" y="46" width="3" height="8" fill="#0B50D0"/></svg><span><b>담당 공무원</b><span>의뢰를 검토·위탁하고 관할 현황을 봐요</span></span></a>
+  </div>
+</div></div>
+<div class="wrap">
+  <section>
+    <div class="sechead"><h2>이용 절차</h2></div>
+    <ol class="howto">
+      <li><b>이력서와 의뢰서 제출</b><span>AI가 부모의 메모를 돌봄 이력서로 정리하고, 희망 시설을 최대 3곳 골라 한 번 제출합니다.</span><em>보호자</em></li>
+      <li><b>사전 회신과 자격 검토</b><span>시설은 이력서를 보고 수용 가능·대기·거절로 회신하고, 같은 때 시군구는 수급 자격과 후견을 검토합니다.</span><em>시설·시군구 동시</em></li>
+      <li><b>위탁 결정</b><span>시군구가 수용 가능하다고 답한 시설에 공식으로 위탁합니다.</span><em>시군구</em></li>
+      <li><b>입소와 기록</b><span>시설이 입소를 보고하고, 회신과 거절 사유는 관할 통계로 쌓입니다.</span><em>시설</em></li>
+    </ol>
+  </section>
+  <section>
+    <div class="sechead"><h2>숫자로 본 돌봄 공백</h2><a href="#evidence" style="font-size:14.5px">자료 출처 보기</a></div>
+    <div class="stats">
+      <div><b><span id="hkVac">4,242</span>석</b><span>장애인 거주시설 빈자리(정원−현원)</span></div>
+      <div><b id="hkShortGap">129곳</b><span>단기거주시설이 없는 시군구(229곳 중)</span></div>
+      <div><b id="hkStaff">1,781명</b><span>거주시설 종사자 결원</span></div>
+      <div><b id="hkTrend">−8.4%</b><span>거주시설 입소인원 변화(2020→2025)</span></div>
+    </div>
+    <p class="src" style="margin:8px 0 0">2025 장애인복지시설 일람표(2024.12 기준), 장애인거주시설 현황(2020~2025). 2026년 11월 사회복지시설정보 API로 다시 세면 단기거주시설 없는 시군구는 <span id="hkGap26">127곳</span>입니다.</p>
+  </section>
+  <div class="notice"><b>알려 드립니다.</b> 화면의 부모 메모와 인물은 가상 예시입니다. 빈자리는 정원과 현원의 차이로, 바로 입소할 수 있다는 뜻은 아닙니다. 실제 입소 가능 여부는 시설과 주민센터에서 확인해야 합니다.</div>
+</div>
+</section>
+
+<!-- ================= 부모 ================= -->
+<section class="view" id="v-g1">
+<div class="phead"><div class="in"><div class="crumb"><a href="#home">홈</a><span>발달장애인 보호자</span><span>돌봄 이력서</span></div><h1>돌봄 이력서 만들기</h1><p>아이에 대해 평소 말하듯 적어 주세요. AI가 시설 상담에 필요한 항목으로 정리합니다.</p></div></div>
+<div class="wrap">
+  <div class="grid2">
+    <div class="card">
+      <h2>부모 메모</h2>
+      <p class="sub">도전행동, 의사소통, 일상생활, 의료, 야간 돌봄으로 정리합니다. 메모에 없는 내용은 지어내지 않고 ‘확인 필요’로 남깁니다.</p>
+      <label class="f" for="story">아이에 대해 적어 주세요 <span class="pill warn" style="justify-self:start">아래는 가상 인물 예시</span></label>
+      <textarea id="story"></textarea>
+      <div class="row" style="margin-top:12px">
+        <label class="f" for="selSido">사는 곳(시도)<select id="selSido"></select></label>
+        <label class="f" for="selSgg">시군구<select id="selSgg"></select></label>
+      </div>
+      <div style="margin-top:12px">
+        <div class="f" style="font-size:14.5px;font-weight:600;margin-bottom:6px">필요한 돌봄</div>
+        <div class="radio" id="needRadio">
+          <label><input type="radio" name="need" value="long" checked> 24시간 장기 거주</label>
+          <label><input type="radio" name="need" value="short"> 단기 거주</label>
+          <label><input type="radio" name="need" value="group"> 소규모 공동생활</label>
+        </div>
+      </div>
+      <div class="btns" style="margin-top:14px">
+        <button class="btn" id="aiBtn" type="button">AI로 돌봄 이력서 만들기</button>
+        <span class="src" id="aiState"></span>
+      </div>
+      <p class="note">AI 정리는 상담을 돕는 초안입니다. 공식 판정을 대신하지 않으며, 부모가 확인한 뒤 의뢰에 씁니다.</p>
+    </div>
+    <div class="card">
+      <h2>돌봄 이력서</h2>
+      <p class="sub" id="resumeSub">왼쪽 버튼을 누르면 정리됩니다.</p>
+      <div class="resume" id="resume"><div class="empty">아직 정리된 이력서가 없습니다. 예시 메모로 바로 눌러 보세요.</div></div>
+    </div>
+  </div>
+  <div class="nextbar"><span class="src">이력서는 시설과 주민센터에 같은 양식으로 전달됩니다.</span><a class="btn" href="#g2">다음: 시설 찾기</a></div>
+</div>
+</section>
+
+<section class="view" id="v-g2">
+<div class="phead"><div class="in"><div class="crumb"><a href="#home">홈</a><span>발달장애인 보호자</span><span>시설 찾기</span></div><h1>시설 찾기</h1><p>사는 곳의 돌봄 자원을 확인하고, 의뢰할 시설을 최대 3곳 고릅니다.</p></div></div>
+<div class="wrap">
+  <div class="card">
+    <h2 id="pathTitle">돌봄 경로</h2>
+    <p class="sub">부모가 돌볼 수 없게 되면 아이는 낮 돌봄, 단기 거주, 장기 거주로 이어져야 합니다. 선택한 시군구에 각 단계 자원이 있는지 먼저 봅니다.</p>
+    <div class="path" id="path"></div>
+    <p class="src" style="margin-top:8px">거주시설·주간이용시설: 2025 장애인복지시설 일람표(2024.12 기준), 시설의 소관 시군구 기준. 최중증 통합돌봄: 한국장애인개발원 디딤돌 2025 가을호(만 18~64세, 최대 3년 이용).</p>
+  </div>
+  <div class="card">
+    <div class="btns" style="justify-content:space-between">
+      <div><h2>추천 시설</h2><p class="sub" id="facSub" style="margin:0"></p></div>
+      <div class="btns">
+        <label class="check"><input type="checkbox" id="pfVac" checked> 빈자리 있는 곳만</label>
+        <label class="check"><input type="checkbox" id="pfStaff"> 종사자 정원 충족 우선</label>
+        <label class="check"><input type="checkbox" id="pfSmall"> 현원 30인 미만 우선</label>
+      </div>
+    </div>
+    <div class="facs" id="facs" style="margin-top:12px"></div>
+    <p class="note">정렬 점수 = 같은 시군구 3점 + 같은 시도 1점 + 빈자리 있음 2점 + (선택 시) 종사자 정원 충족 1점 + (선택 시) 현원 30인 미만 1점 + 시설이 등록한 대응 가능 항목이 이력서와 맞으면 항목당 1점. 실제 입소 가능 여부는 의뢰를 보내 시설의 회신으로 확인합니다.</p>
+  </div>
+  <div class="nextbar"><span class="src" id="selCount">아직 고른 시설이 없습니다.</span><span class="btns"><a class="btn ghost" href="#g1">이전</a><a class="btn" href="#g3">다음: 의뢰 보내기</a></span></div>
+</div>
+</section>
+
+<section class="view" id="v-g3">
+<div class="phead"><div class="in"><div class="crumb"><a href="#home">홈</a><span>발달장애인 보호자</span><span>의뢰 보내기</span></div><h1>의뢰 보내기</h1><p>한 번 보내면 고른 시설과 주민센터(시군구)에 같은 의뢰서가 동시에 전달됩니다.</p></div></div>
+<div class="wrap">
+  <div class="card">
+    <div class="grid2e">
+      <div>
+        <h2>의뢰서</h2>
+        <p class="sub">시설은 이력서를 보고 받을 수 있는지 먼저 회신하고, 시군구는 같은 때 수급 자격과 후견을 검토합니다. 입소는 시군구의 위탁 결정으로 확정됩니다.</p>
+        <pre class="letter" id="letter">이력서를 만들고 시설을 고르면 의뢰서가 채워집니다.</pre>
+        <div class="btns" style="margin-top:12px">
+          <button class="btn" id="sendBtn" type="button">시설과 주민센터에 함께 보내기</button>
+          <button class="btn ghost" id="copyBtn" type="button">의뢰서 복사</button>
+          <span class="src" id="sendState"></span>
+        </div>
+      </div>
+      <div>
+        <h3 style="margin-bottom:6px">미리 알아 두면 좋은 것</h3>
+        <ul class="tight" id="checklist"></ul>
+        <p class="src" style="margin-top:10px">근거: 2025 국민기초생활보장 사업안내 283쪽(의사무능력자 급여관리), 319~324쪽(보장시설), 337~338쪽(보장시설 생계급여).</p>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="view" id="v-g4">
+<div class="phead"><div class="in"><div class="crumb"><a href="#home">홈</a><span>발달장애인 보호자</span><span>진행 상황</span></div><h1>진행 상황</h1><p>보낸 의뢰가 시설과 시군구에서 어디까지 처리됐는지 한 화면에서 봅니다.</p></div></div>
+<div class="wrap"><div id="gStatus"></div></div>
+</section>
+
+<!-- ================= 시설 ================= -->
+<section class="view" id="v-facility">
+<div class="phead"><div class="in"><div class="crumb"><a href="#home">홈</a><span>시설 담당자</span><span>들어온 의뢰</span></div><h1>들어온 의뢰</h1><p>보호자가 보낸 돌봄 이력서를 보고 받을 수 있는지 회신합니다. 거절할 때는 사유를 하나 이상 남깁니다.</p></div></div>
+<div class="wrap">
+  <div class="card">
+    <div class="btns" style="justify-content:space-between"><h2>의뢰함</h2><span class="src" id="inboxCount"></span></div>
+    <p class="sub">회신은 입소 전 사전 의사입니다. 최종 입소는 시군구의 위탁 결정이 온 뒤 확정되고, 이때 시설은 입소 완료를 보고합니다.</p>
+    <div class="ref" id="inbox"></div>
+  </div>
+</div>
+</section>
+
+<section class="view" id="v-fprofile">
+<div class="phead"><div class="in"><div class="crumb"><a href="#home">홈</a><span>시설 담당자</span><span>우리 시설 정보</span></div><h1>우리 시설 정보</h1><p>공공데이터에 없는 정보, 곧 우리 시설이 대응할 수 있는 돌봄을 직접 등록합니다. 보호자의 시설 찾기에 바로 반영됩니다.</p></div></div>
+<div class="wrap">
+  <div class="grid2">
+    <div class="card">
+      <h2>공공데이터로 확인된 정보</h2>
+      <div class="row" style="margin:10px 0 14px"><label class="f">시도<select id="fpSido"></select></label><label class="f">시설<select id="fpFac"></select></label></div>
+      <div id="fpPublic"></div>
+    </div>
+    <div class="card">
+      <h2>우리 시설이 대응할 수 있는 돌봄</h2>
+      <p class="sub">보호자의 돌봄 이력서 항목과 같은 말로 등록합니다. 등록한 항목이 이력서와 맞으면 추천 순위가 올라갑니다.</p>
+      <div class="caps" id="fpCaps"></div>
+      <div class="btns" style="margin-top:14px"><button class="btn" id="fpSave" type="button">등록하기</button><span class="src" id="fpState"></span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ================= 공무원: 의뢰 처리 ================= -->
+<section class="view" id="v-cases">
+<div class="phead"><div class="in"><div class="crumb"><a href="#home">홈</a><span>담당 공무원</span><span>의뢰 처리</span></div><h1>의뢰 처리</h1><p>보호자의 의뢰서와 시설의 사전 회신을 한 화면에서 보고, 자격을 검토해 위탁을 결정합니다.</p></div></div>
+<div class="wrap"><div id="cases"></div></div>
+</section>
+
+<!-- ================= 정부: 레이더 ================= -->
+<section class="view" id="v-radar">
+<div class="phead"><div class="in"><div class="crumb"><a href="#home">홈</a><span>시군구·시도</span><span>돌봄 공백 현황</span></div><h1>돌봄 공백 현황</h1><p>시설 수와 빈자리, 종사자 결원, 단기거주시설이 없는 지역을 전국 단위로 봅니다.</p></div></div>
+<div class="wrap">
+  <div class="tiles" id="tiles"></div>
+  <div class="grid2e">
+    <div class="card">
+      <h2>거주시설 입소인원, 5년째 감소</h2>
+      <p class="sub">전국 장애인 거주시설 입소인원(명)과 시설 수(개소)</p>
+      <div id="trendChart"></div>
+      <p class="src">2020~2023: 보건복지통계연보, 2024·2025: 장애인복지시설 일람표 총괄표 (제공 파일 「4-3 특광역시 장애인거주시설 현황(2020-2025)」). 2024는 일람표 원문과 대조해 일치.</p>
+    </div>
+    <div class="card">
+      <h2>빈자리는 어디에 있나</h2>
+      <p class="sub">시설 종류별 정원 대비 빈자리 (2024.12)</p>
+      <div id="typeChart"></div>
+      <p class="src">2025 장애인복지시설 일람표 총괄표 3쪽.</p>
+    </div>
+  </div>
+  <div class="card">
+    <h2>시도별 돌봄 공급과 수요</h2>
+    <p class="sub">발달장애 관련 거주 정원 = 지적장애인시설 + 중증장애인 거주시설 + 단기거주시설 + 공동생활가정. 수요 지표는 심한 장애 등록장애인 수(모든 장애유형, 2025)로, 발달장애만의 수치가 아닙니다.</p>
+    <div class="tablewrap"><table id="sidoTable"></table></div>
+  </div>
+  <div class="grid2e">
+    <div class="card">
+      <h2>단기거주시설이 없는 시군구</h2>
+      <p class="sub" id="gapSub"></p>
+      <div class="tablewrap"><table id="gapTable"></table></div>
+    </div>
+    <div class="card">
+      <h2>입소 거절 사유</h2>
+      <p class="sub">바톤에서 오간 의뢰의 회신을 집계합니다. 이 데모에 쓴 공공데이터(일람표, 등록장애인 통계)에는 이 항목이 없습니다.</p>
+      <div id="refStats"></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ================= 정부: 관할 업무 ================= -->
+<section class="view" id="v-office">
+<div class="phead"><div class="in"><div class="crumb"><a href="#home">홈</a><span>시군구</span><span>관할 업무</span></div><h1>관할 업무</h1><p>관할 시군구의 돌봄 자원, 공적 의뢰 처리 절차, 주간 보고서 초안을 한 화면에서 봅니다.</p></div></div>
+<div class="wrap">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div><h2 style="font-size:17px">조회할 관할</h2><p class="src" style="margin:2px 0 0">시설 목록은 API로 현행화하고, 정원·현원·종사자는 일람표 값을 함께 보여 줍니다.</p></div>
+      <div class="btns"><label class="f" style="min-width:140px">시도<select id="oSido"></select></label><label class="f" style="min-width:180px">시군구<select id="oSgg"></select></label></div>
+    </div>
+    <div class="btns" style="margin-top:8px"><span class="pill ok" id="oAsof"></span><span class="pill">정원·현원·종사자: 2025 장애인복지시설 일람표(2024.12 기준)</span><span class="pill">수요: 시군구별 등록장애인(2025)</span></div>
+  </div>
+  <div class="tiles" id="oTiles"></div>
+  <div class="grid2e">
+    <div class="card">
+      <h2>관할 돌봄 자원</h2>
+      <p class="sub" id="oFacSub"></p>
+      <div class="tablewrap" style="max-height:520px;overflow:auto"><table id="oFacTable"></table></div>
+      <p class="src" id="oFacNote"></p>
+    </div>
+    <div class="card">
+      <h2>공적 돌봄 의뢰 처리 절차</h2>
+      <p class="sub">부모가 보낸 의뢰가 보장기관을 거쳐 시설에 위탁되기까지. 쪽수는 보건복지부 「2025 국민기초생활보장 사업안내」입니다. 바톤이 새로 더하는 단계는 <span class="pill relay">바톤</span>으로 표시했습니다.</p>
+      <ol class="flow" id="oFlow"></ol>
+      <div id="oRefs" style="margin-top:10px"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+      <div><h2>주간 현황 보고 초안</h2><p class="sub">선택한 관할의 확인된 수치만 넣어 개조식 보고서 초안을 만듭니다. 수치는 화면이 계산해 넘기고, AI는 문장만 다듬습니다. 담당자가 확인한 뒤 결재에 올립니다.</p></div>
+      <div class="btns"><button class="btn" id="oRptBtn" type="button">보고서 초안 만들기</button><button class="btn ghost" id="oCopyBtn" type="button">복사</button><span class="src" id="oRptState"></span></div>
+    </div>
+    <pre class="letter rpt" id="oRpt">관할을 고르고 ‘보고서 초안 만들기’를 누르세요.</pre>
+  </div>
+  <div class="grid2e">
+    <div class="card">
+      <h2>단계적 추진 계획 <span class="pill">제안</span></h2>
+      <ol class="plan">
+        <li><b>1단계 · 시범</b> 단기거주시설이 없는 시군구가 많은 시도 한 곳에서, 의뢰서·회신 기록(수용·대기·거절과 사유)만 먼저 운영합니다. 새 시스템 없이 이 화면과 기존 공문 절차로 시작할 수 있습니다.</li>
+        <li><b>2단계 · 연계</b> 사회복지시설정보 API로 시설 목록·구인정보를 정기 갱신하고(이 화면에 이미 적용), 보장시설 수급자 선정·급여 위탁 처리는 사회보장정보시스템(행복e음)의 기존 업무 흐름에 연결합니다.</li>
+        <li><b>3단계 · 확산</b> 쌓인 거절 사유와 회신 기간을 근거로 ‘보조금 설계’ 화면의 운영비 가산 기준(어려운 이용자 수용, 단기거주 공백 지역)을 시도 예산 편성에 반영합니다.</li>
+      </ol>
+      <p class="src">단계 구분과 순서는 바톤 팀의 제안이며, 시기·대상 지역은 주관 부처와 협의해 정합니다.</p>
+    </div>
+    <div class="card">
+      <h2>성과지표 <span class="pill">제안</span></h2>
+      <div class="tablewrap"><table>
+        <tr><th>지표</th><th>지금 알 수 있는 값</th><th>바톤으로 새로 생기는 값</th></tr>
+        <tr><td>시설 정보 현행화</td><td>일람표 연 1회(이번 자료는 2024.12 기준)</td><td>API 조회 시점 기준 목록(현재 <span class="num" id="kAsof"></span>)</td></tr>
+        <tr><td>단기거주시설 없는 시군구</td><td><span class="num" id="kGap24"></span> (2024.12 일람표)</td><td><span class="num" id="kGap26"></span> (2026 API, 같은 기준으로 재계산)</td></tr>
+        <tr><td>의뢰 수용률</td><td>공공데이터에 없음</td><td>의뢰 대비 수용 비율</td></tr>
+        <tr><td>첫 회신까지 걸린 날</td><td>공공데이터에 없음</td><td>의뢰일과 회신일의 차이</td></tr>
+        <tr><td>거절 사유 분포</td><td>공공데이터에 없음</td><td>종사자 부족·도전행동 대응 등 사유별 건수</td></tr>
+      </table></div>
+      <p class="src">목표치는 넣지 않았습니다. 시범 운영 첫 분기 값을 기준선으로 삼아 정하는 것을 제안합니다.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ================= 정부: 보조금 ================= -->
+<section class="view" id="v-funding">
+<div class="phead"><div class="in"><div class="crumb"><a href="#home">홈</a><span>시도·보건복지부</span><span>보조금 설계</span></div><h1>보조금 설계</h1><p>보장시설 생계급여의 현재 기준과, 돌봄이 어려운 이용자를 받는 시설에 더 지원하는 방식을 비교합니다.</p></div></div>
+<div class="wrap">
+  <div class="grid2e">
+    <div class="card">
+      <h2>지금의 규칙: 시설이 클수록 1인당 단가만 달라집니다</h2>
+      <p class="sub">2025년 보장시설 수급자 1인당 월 생계급여 지급기준. 구간은 시설의 ‘수급자 현원’으로 나뉘며, 이용자의 돌봄 난이도는 기준에 없습니다.</p>
+      <div id="tierChart"></div>
+      <ul class="tight">
+        <li>보장시설 생계급여는 주식비·부식비·연료비·의류비 용도이며 종사자 인건비로 쓸 수 없습니다.</li>
+        <li>보장시설은 정부가 운영비와 인건비를 전액 지원하는 생활시설입니다. 장애인 단기거주시설과 공동생활가정은 보장시설이 아닙니다.</li>
+      </ul>
+      <p class="src">2025 국민기초생활보장 사업안내 320쪽, 338쪽.</p>
+    </div>
+    <div class="card">
+      <h2>바톤의 제안: 돌봄 필요도와 수용 실적에 따른 가산</h2>
+      <p class="sub">최중증 이용자를 받아 돌보는 시설에, 인건비로 쓸 수 있는 가산금을 별도로 지급합니다. 수용 실적은 바톤의 의뢰·회신 기록으로 확인합니다.</p>
+      <div class="formula">월 가산금 = 최중증 이용자 수 × 가산 단가<br>+ 바톤 의뢰 수용 건수 × 수용 장려금<br>지급 조건: 인권침해·회계부정 이력 없음, 회신 기한 준수</div>
+      <ul class="tight" style="margin-top:10px">
+        <li>최중증 여부는 시설이 아니라 지역발달장애인지원센터 판정을 씁니다(점수 부풀리기 방지).</li>
+        <li>도전행동이 줄어 판정이 낮아져도 일정 기간 가산을 유지해, 개선을 벌주지 않습니다.</li>
+        <li>거절 사유가 ‘인력 부족’으로 반복되는 지역은 가산 단가를 올려 공급을 유도합니다.</li>
+      </ul>
+      <p class="src">제외 조건은 서울시 「최중증장애인 다수이용 지정시설 모집공고」(2016·2017)의 인권침해·회계부정 제외 조건을 참고했습니다.</p>
+    </div>
+  </div>
+  <div class="card">
+    <h2>시설 한 곳으로 계산해 보기</h2>
+    <p class="sub">실제 시설을 고르면 일람표의 정원·현원이 채워집니다. 가산 단가와 장려금은 정책 결정 값이라 정해진 근거가 없으며, 아래 값은 계산을 보여 주기 위한 예시 입력입니다.</p>
+    <div class="grid2e">
+      <div style="display:grid;gap:10px">
+        <label class="f" for="fFac">시설 (중증·지적장애인 거주시설)<select id="fFac"></select></label>
+        <div class="row">
+          <label class="f" for="fRecip">보장시설 수급자 현원(명)<input type="number" id="fRecip" min="0"></label>
+          <label class="f" for="fSevere">그중 최중증 판정 이용자(명) <input type="number" id="fSevere" min="0" value="5"></label>
+        </div>
+        <div class="row">
+          <label class="f" for="fUnit">가산 단가(원/인·월) <input type="number" id="fUnit" min="0" step="10000" value="500000"></label>
+          <label class="f" for="fAccept">바톤 의뢰 수용(건/월)<input type="number" id="fAccept" min="0" value="1"></label>
+        </div>
+        <label class="f" for="fBonus">수용 장려금(원/건)<input type="number" id="fBonus" min="0" step="10000" value="1000000"></label>
+        <p class="src" id="fFacInfo"></p>
+      </div>
+      <div>
+        <div class="cmp">
+          <div class="box"><div class="src">현행 보장시설 생계급여(월)</div><div class="v" id="fNow"></div><div class="src" id="fNowNote"></div></div>
+          <div class="box new"><div class="src">제안 가산금(월, 인건비 용도)</div><div class="v" id="fAdd"></div><div class="src" id="fAddNote"></div></div>
+        </div>
+        <p class="note">현행 금액은 2025년 지급기준(사업안내 338쪽)을 입력한 수급자 현원에 곱한 값입니다. 실제 지급액은 입·퇴소일 일할 계산 등으로 달라질 수 있습니다.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ================= 근거 ================= -->
+<section class="view" id="v-evidence">
+<div class="phead"><div class="in"><div class="crumb"><a href="#home">홈</a><span>공통</span><span>자료 출처</span></div><h1>자료 출처</h1><p>이 화면의 모든 숫자가 어느 자료의 어디에서 왔는지 밝힙니다.</p></div></div>
+<div class="wrap">
+  <div class="card">
+    <h2>이 화면의 모든 숫자는 어디서 왔나</h2>
+    <p class="sub">제공받은 원자료를 직접 열어 추출하고, 원문 합계와 대조했습니다. 근거가 없는 값은 쓰지 않았고, 정책 설계용 입력값은 ‘예시 입력’으로 표시했습니다.</p>
+    <div class="tablewrap"><table>
+      <tr><th>자료</th><th>쓴 곳</th><th>검증</th></tr>
+      <tr><td>보건복지부 「2025 장애인복지시설 일람표」(2024.12 기준, 265쪽)</td><td>거주시설 1,524곳의 시설명·소관 시군구·정원·현원·종사자 정원·현원·주소, 주간이용시설 목록</td><td>시설 목록에서 1,524건을 추출해 3쪽 총괄표의 17개 시도 × 8개 종류(시설수·정원·현원) 408개 값과 대조, 모두 일치. 주간이용시설 855곳도 4쪽 총괄표의 시도별 개수와 모두 일치.</td></tr>
+      <tr><td>「4-3 특광역시 장애인거주시설 현황(2020-2025)」 xlsx</td><td>입소인원·시설 수 추이</td><td>2024 시트가 일람표 총괄표와 일치함을 확인. 2025 시트는 파일에 적힌 출처(2026 일람표) 기준이며 원문 PDF는 받지 않았습니다.</td></tr>
+      <tr><td>시군구별 장애정도별 성별 등록장애인수(2025) csv</td><td>시도·시군구 수요 지표(심한 장애)</td><td>전국 2,627,761명, 심한 장애 963,658명. 시도 소계 합이 전국 값과 일치.</td></tr>
+      <tr><td>보건복지부 「2025 국민기초생활보장 사업안내」</td><td>보장시설 범위·요건, 위탁 거부 금지, 수급자 1인당 생계급여 기준, 급여관리자·후견</td><td>쪽수를 각 문장 옆에 표기</td></tr>
+      <tr><td>한국사회보장정보원 사회복지시설정보 OpenAPI 활용가이드</td><td>관할 업무 화면의 2026 시설 목록 2,384곳과 구인 공고 229건(시설목록·시설별 구인정보, Service2)</td><td>2026.11.06 장애인 시설 종류 6개 코드 전수 조회, 시설 2,384곳 전부에 구인정보 조회. 일람표와 같은 시도·단계 안 시설명으로 2,272곳(95.5%) 연결. 발급 키는 화면과 코드 어디에도 넣지 않았습니다.</td></tr>
+      <tr><td>장애수당 장애정도별 장애유형별 수급자수(기초생활보장), 2025.12~2026.9</td><td>검토 후 미사용</td><td>2026.9 기준 325,062명 중 자폐성 350명으로, 자폐성 장애인은 대부분 장애인연금 대상이라 이 자료에 거의 잡히지 않습니다. 발달장애 수요 지표로 쓰기에 맞지 않아 제외했습니다.</td></tr>
+    </table></div>
+  </div>
+  <div class="grid2e">
+    <div class="card">
+      <h2>사회 배경 (언론 보도)</h2>
+      <ul class="tight">
+        <li>고 전경철 작가는 중증 자폐 아들의 거처를 찾아 1년 넘게 전국 시설 1,000여 곳의 문을 두드렸으나 받아준 곳이 없었다. <a href="https://www.fnnews.com/news/202609070740518906">파이낸셜뉴스, 2026.9.7</a></li>
+        <li>정부는 2026년 9월 10일 ‘발달장애인 돌봄 국가책임제 추진방안’을 발표했다. <a href="https://www.ajunews.com/view/20260910133649888">아주경제, 2026.9.10</a></li>
+        <li>최중증 발달장애인 통합돌봄서비스는 만 18~64세 대상, 24시간형·주간형으로 운영되며 최대 3년 이용할 수 있다. <a href="https://www.koddi.or.kr/webzine/didimdol/vol304/page04-01.html">한국장애인개발원 디딤돌 2025 가을호</a></li>
+        <li>통합돌봄서비스는 주소지 읍·면·동 행정복지센터에서 신청한다. <a href="https://www.jjan.kr/article/20240715580060">전북일보, 김제시 안내</a></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>데이터 해석의 한계</h2>
+      <ul class="tight">
+        <li>시군구는 시설의 ‘소관’ 시군구입니다. 서울 소관 시설 중 12곳은 실제 경기도에 있는 등, 소재지와 다를 수 있습니다.</li>
+        <li>빈자리는 정원과 현원의 차이일 뿐 즉시 입소 가능 여부가 아닙니다. 인력·건물 사정으로 받지 못하는 자리일 수 있어 의뢰로 확인합니다.</li>
+        <li>수요 지표(심한 장애 등록장애인)는 모든 장애유형을 포함합니다. 시군구별 지적·자폐성 등록장애인 수를 받으면 바로 바꿀 수 있습니다.</li>
+        <li>종사자 결원과 빈자리율 사이에는 뚜렷한 관계가 보이지 않았습니다(결원 시설 13.7%, 정원 충족 시설 13.4%). 그래서 화면에서 둘을 인과로 설명하지 않습니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</section>
+<footer class="foot"><div class="in"><b>바톤</b><span>2026 사회보장 데이터 활용 AI 혁신 아이디어 경진대회 출품 시제품</span><span>자료: 보건복지부 2025 장애인복지시설 일람표(2024.12 기준), 2025 국민기초생활보장 사업안내, 시군구별 등록장애인 현황(2025), 한국사회보장정보원 사회복지시설정보 OpenAPI(2026.11.06 조회)</span></div></footer>
+
+<script src="data.js"></script>
+<script src="data_api.js"></script>
+<script>
+const D = window.BATON_DATA;
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n).toLocaleString("ko-KR");
+const won = n => fmt(Math.round(n)) + "원";
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const SIDO_ORDER = ["서울","부산","대구","인천","광주","대전","울산","세종","경기","강원","충북","충남","전북","전남","경북","경남","제주"];
+const TYPE_NAME = {지체:"지체장애인 거주시설",시각:"시각장애인 거주시설",청각:"청각·언어장애인 거주시설",지적:"지적장애인 거주시설",중증:"중증장애인 거주시설",영유아:"장애영유아 거주시설",단기:"장애인 단기거주시설",공동:"장애인 공동생활가정"};
+const DEV = new Set(["지적","중증","단기","공동"]);
+// fac: [sido,sgg,name,type,cap,cur,scap,scur,addr,year,locSido,page]
+const FAC = D.fac.map((f,i)=>({i,sido:f[0],sgg:f[1],name:f[2],type:f[3],cap:f[4],cur:f[5],scap:f[6],scur:f[7],addr:f[8],year:f[9],loc:f[10],page:f[11]}));
+const TIERS = [{lt:30,amt:356568,label:"30인 미만"},{lt:100,amt:323664,label:"30~99인"},{lt:300,amt:311162,label:"100~299인"},{lt:Infinity,amt:311139,label:"300인 이상"}];
+
+/* ---------- 집계 ---------- */
+const tot = FAC.reduce((a,f)=>{a.cap+=f.cap;a.cur+=f.cur;a.scap+=f.scap;a.scur+=f.scur;if(f.scur<f.scap)a.short++;return a},{cap:0,cur:0,scap:0,scur:0,short:0});
+const sggKeys = Object.keys(D.reg);
+const bySgg = {};
+FAC.forEach(f=>{const k=f.sido+"|"+f.sgg;(bySgg[k]=bySgg[k]||[]).push(f)});
+const hasType = (k,t)=>(bySgg[k]||[]).some(f=>f.type===t);
+const noShort = sggKeys.filter(k=>!hasType(k,"단기"));
+const tr = D.trend;
+const t2020 = tr["2020"].data["입소인원"]["전국"], t2025 = tr["2025"].data["입소인원"]["전국"];
+$("hkVac").textContent = fmt(tot.cap-tot.cur);
+$("hkShortGap").textContent = noShort.length+"곳";
+$("hkStaff").textContent = fmt(tot.scap-tot.scur)+"명";
+$("hkTrend").textContent = ((t2025-t2020)/t2020*100).toFixed(1)+"%";
+
+/* ---------- 지역 선택 ---------- */
+const sidoSgg = {};
+sggKeys.forEach(k=>{const [s,g]=k.split("|");(sidoSgg[s]=sidoSgg[s]||[]).push(g)});
+$("selSido").innerHTML = SIDO_ORDER.map(s=>`<option>${s}</option>`).join("");
+function fillSgg(){const s=$("selSido").value;$("selSgg").innerHTML=(sidoSgg[s]||[]).sort((a,b)=>a.localeCompare(b,"ko")).map(g=>`<option>${g}</option>`).join("")}
+$("selSido").value="경기"; fillSgg(); $("selSgg").value="용인시";
+$("selSido").onchange=()=>{fillSgg();renderPath()};
+$("selSgg").onchange=renderPath;
+document.querySelectorAll("input[name=need]").forEach(r=>r.onchange=renderPath);
+["pfVac","pfStaff","pfSmall"].forEach(id=>$(id).onchange=renderFacs);
+
+/* ---------- 예시 메모 (가상 인물) ---------- */
+$("story").value = `[가상 예시] 아들 도윤(가명)은 29살, 자폐성 장애(심한 장애)예요. 말은 “밥”, “집” 같은 단어 몇 개만 하고, 원하는 게 있으면 제 손을 끌고 가요.
+낯선 곳에 가거나 일정이 갑자기 바뀌면 손등을 깨물고 머리를 벽에 박아요. 일주일에 서너 번은 그래요. 심할 땐 옆 사람을 밀치기도 해서 작년에 주간보호센터를 그만뒀어요.
+좋아하는 노래를 틀어 주고 조용한 방에 10분쯤 두면 가라앉아요. 큰 소리랑 사람 많은 곳은 정말 힘들어해요.
+밥은 혼자 먹지만 흘리고, 화장실은 데려가 줘야 해요. 밤에 두세 번 깨서 돌아다녀서 제가 같이 깨요. 간질 약을 아침저녁으로 먹어요.
+저는 64살이고 혼자 키웠는데, 지난달 암 진단을 받아 곧 입원 치료를 시작해요. 이제 제가 계속 돌볼 수 없어서 도윤이가 오래 지낼 곳이 필요해요.`;
+
+/* ---------- AI 이력서 ---------- */
+let RESUME = null, SAMPLE = null;
+const SCHEMA_HINT = `{
+ "요약": "한 문장",
+ "도전행동": [{"유형":"자해|타해|기물파손|이탈|소리지르기|기타","내용":"","빈도":"매일|주 여러 번|주 1회 이하|월 단위|모름","강도":"낮음|중간|높음|모름","촉발요인":"","진정방법":""}],
+ "의사소통": {"수준":"문장으로 말함|단어·몸짓|거의 없음|모름","방법":""},
+ "일상생활": {"식사":"스스로|부분 도움|전적 도움|모름","용변":"…","이동":"…","야간":"설명"},
+ "의료": {"질환_복약":"","필요한_처치":""},
+ "선호": "", "피해야_할_것": "",
+ "필요돌봄": "낮 돌봄|단기 거주|24시간 장기 거주",
+ "필요돌봄_근거": "",
+ "시설에_꼭_알릴_것": ["", "", ""],
+ "확인_필요": ["메모에 없어 상담 때 물어야 할 것"]
+}`;
+function buildPrompt(text){
+  return `당신은 발달장애인 거주시설 입소 상담을 돕는 사회복지 담당자입니다. 아래 부모 메모를 시설에 전달할 '돌봄 이력서'로 정리하세요.
+규칙:
+- 메모에 적힌 내용만 쓰세요. 적혀 있지 않은 사실은 지어내지 말고 "모름"으로 두거나 확인_필요에 넣으세요.
+- 진단·약 이름은 메모에 있는 표현 그대로 쓰세요.
+- 짧고 존중하는 표현을 쓰세요.
+- 아래 JSON 형식으로만 답하세요. 다른 말은 하지 마세요.
+형식:
+${SCHEMA_HINT}
+
+부모 메모:
+"""${text}"""`;
+}
+function ruleResume(t){ // AI를 쓸 수 없을 때의 간이 정리(키워드)
+  const has = w => t.includes(w);
+  const beh = [];
+  if(has("깨물")||has("머리를")||has("박아")) beh.push({유형:"자해",내용:"메모에서 자해 관련 표현 확인",빈도:has("서너 번")?"주 여러 번":"모름",강도:"모름",촉발요인:has("낯선")?"낯선 곳, 일정 변경":"모름",진정방법:has("노래")?"좋아하는 노래, 조용한 방":"모름"});
+  if(has("밀치")||has("때리")) beh.push({유형:"타해",내용:"메모에서 타해 관련 표현 확인",빈도:"모름",강도:"모름",촉발요인:"모름",진정방법:"모름"});
+  return {요약:"간이 정리입니다. AI 연결이 되면 더 자세히 정리됩니다.",도전행동:beh,
+    의사소통:{수준:has("단어")?"단어·몸짓":"모름",방법:has("손을 끌")?"손을 끌어 요구 표현":"모름"},
+    일상생활:{식사:has("혼자 먹")?"부분 도움":"모름",용변:has("화장실은 데려")?"전적 도움":"모름",이동:"모름",야간:has("밤에")?"밤에 깨서 돌아다님":"모름"},
+    의료:{질환_복약:has("약")?"복약 있음(메모 확인)":"모름",필요한_처치:"모름"},선호:has("노래")?"좋아하는 노래":"",피해야_할_것:has("큰 소리")?"큰 소리, 사람 많은 곳":"",
+    필요돌봄:"24시간 장기 거주",필요돌봄_근거:"간이 규칙: 야간 돌봄·자해 표현",시설에_꼭_알릴_것:["도전행동 촉발요인과 진정 방법","야간 각성","복약"],확인_필요:["도전행동 강도","약 이름과 용량","보호자 연락망"]};
+}
+(async()=>{ try{ if(window.claude&&window.claude.use){ SAMPLE = await window.claude.use("sample"); } }catch(e){ SAMPLE=null; }
+  $("aiState").textContent = SAMPLE ? "AI 연결됨" : "AI에 연결되지 않으면 간이 규칙으로 정리합니다";
+})();
+$("aiBtn").onclick = async ()=>{
+  const text = $("story").value.trim(); if(!text){$("aiState").textContent="메모를 적어 주세요.";return;}
+  $("aiBtn").disabled=true; $("aiState").innerHTML='<span class="spin"></span> 정리하는 중';
+  let r=null, how="";
+  if(SAMPLE){
+    try{ r = await SAMPLE.json(buildPrompt(text),{modelTier:"default"}); how="AI 정리"; }
+    catch(e){ r=null; how = e&&e.code==="not_granted" ? "AI 사용이 허용되지 않아 간이 정리" : "AI 응답 오류로 간이 정리"; }
+  }
+  if(!r||typeof r!=="object"){ r = ruleResume(text); if(!how) how="간이 규칙 정리(AI 미연결)"; }
+  RESUME = r; $("aiBtn").disabled=false; $("aiState").textContent = how+" 완료";
+  $("resumeSub").textContent = how+" · 부모 확인 후 사용";
+  renderResume();
+  const need = String(r.필요돌봄||"");
+  const v = need.includes("단기")?"short":need.includes("24시간")||need.includes("장기")?"long":null;
+  if(v){ document.querySelector(`input[name=need][value=${v}]`).checked=true; }
+  renderPath();
+};
+function val(x){return x==null||x===""?"<span class='src'>모름</span>":esc(x)}
+function renderResume(){ if(!RESUME) return; $("resume").innerHTML=resumeHTML(RESUME); renderLetter(); renderFacs(); }
+
+/* ---------- 돌봄 경로 ---------- */
+let SEL = new Set();
+function need(){return document.querySelector("input[name=need]:checked").value}
+function renderPath(){
+  const s=$("selSido").value, g=$("selSgg").value, k=s+"|"+g;
+  const list = bySgg[k]||[];
+  const day = D.day[k]||[0,0];
+  const cnt = t=>list.filter(f=>f.type===t);
+  const st = cnt("단기"), lg = list.filter(f=>f.type==="지적"||f.type==="중증"), gr = cnt("공동");
+  const vac = a=>a.reduce((x,f)=>x+Math.max(0,f.cap-f.cur),0);
+  const reg = D.reg[k];
+  $("pathTitle").textContent = `${s} ${g}의 돌봄 경로`;
+  const stage=(t,h,n,unit,detail,gap)=>`<div class="stage ${gap?"gap":""}"><div class="t">${t}</div><div class="h">${h}</div><div class="n">${n}<span class="src"> ${unit}</span></div><div class="src">${detail}</div></div>`;
+  $("path").innerHTML =
+    stage("1단계 · 낮","주간이용시설",day[0],"곳",`정원 ${fmt(day[1])}명`,day[0]===0)+
+    stage("2단계 · 보호자 부재","단기거주시설",st.length,"곳",`빈자리 ${fmt(vac(st))}석 · 보장시설 아님`,st.length===0)+
+    stage("3단계 · 최중증 1:1","통합돌봄서비스","신청","",`주민센터 신청 · 만 18~64세 · 최대 3년`,false)+
+    stage("4단계 · 장기","지적·중증 거주시설",lg.length,"곳",`빈자리 ${fmt(vac(lg))}석 · 공동생활가정 ${gr.length}곳`,lg.length===0);
+  renderFacs();
+  renderLetter();
+}
+function typesFor(n){return n==="short"?["단기"]:n==="group"?["공동"]:["중증","지적"]}
+function score(f,s,g){
+  let sc=0; const why=[];
+  if(f.sido===s&&f.sgg===g){sc+=3;why.push("같은 시군구")} else if(f.sido===s){sc+=1;why.push("같은 시도")}
+  if(f.cap>f.cur){sc+=2;why.push("빈자리")}
+  if($("pfStaff").checked&&f.scur>=f.scap){sc+=1;why.push("종사자 충족")}
+  if($("pfSmall").checked&&f.cur<30){sc+=1;why.push("소규모")}
+  const m=(FPROF[f.i]||[]).filter(k=>capsNeeded(RESUME).includes(k));
+  if(m.length){sc+=m.length;why.push(`대응 가능 ${m.length}개 일치`)}
+  return {sc,why};
+}
+function renderFacs(){
+  const s=$("selSido").value, g=$("selSgg").value, ts=typesFor(need());
+  let c = FAC.filter(f=>ts.includes(f.type) && f.sido===s);
+  if($("pfVac").checked) c=c.filter(f=>f.cap>f.cur);
+  c = c.map(f=>({f,...score(f,s,g)})).sort((a,b)=>b.sc-a.sc || (b.f.cap-b.f.cur)-(a.f.cap-a.f.cur)).slice(0,8);
+  const total = FAC.filter(f=>ts.includes(f.type)&&f.sido===s).length;
+  $("facSub").textContent = `${s} 안의 ${ts.map(t=>TYPE_NAME[t]).join("·")} ${total}곳 중 상위 ${c.length}곳 · 최대 3곳까지 골라 의뢰할 수 있습니다`;
+  if(!c.length){$("facs").innerHTML='<div class="empty">조건에 맞는 시설이 없습니다. ‘빈자리 있는 곳만’을 끄거나 다른 돌봄 형태를 골라 보세요.</div>';return;}
+  $("facs").innerHTML = c.map(({f,sc,why})=>{
+    const v=f.cap-f.cur, sr=f.scap?Math.round(f.scur/f.scap*100):0;
+    const far = f.loc && f.loc!==f.sido;
+    return `<div class="fac ${SEL.has(f.i)?"sel":""}">
+      <div><div class="nm">${esc(nm(f.i))}</div>
+        <div class="meta">${TYPE_NAME[f.type]} · 소관 ${esc(f.sido)} ${esc(f.sgg)} · ${esc(f.addr)}${f.year?` · ${f.year}년 신고`:""}</div>
+        <div class="chips">
+          <span class="pill ${v>0?"ok":"bad"}">정원 ${f.cap} · 현원 ${f.cur} · 빈자리 ${Math.max(0,v)}</span>
+          <span class="pill ${sr>=100?"ok":sr>=80?"warn":"bad"}">종사자 ${f.scur}/${f.scap}명 (${sr}%)</span>
+          ${far?`<span class="pill warn">소재지 ${esc(f.loc)}</span>`:""}
+          ${(()=>{const a=(window.BATON_APIFAC||{})[f.i]; return a?`<span class="pill ok">2026 API 목록 확인</span>${a.act?`<span class="pill warn">채용 중 공고 ${a.act}건</span>`:""}`:(window.BATON_API?`<span class="pill">2026 API에서 이름 미확인</span>`:"")})()}
+          ${why.map(w=>`<span class="pill acc">${w}</span>`).join("")}
+          ${(FPROF[f.i]||[]).length?`<span class="pill">시설 등록: ${FPROF[f.i].map(capName).join(", ")}</span>`:""}
+        </div></div>
+      <div class="score"><b>${sc}점</b><button class="btn sm ${SEL.has(f.i)?"":"ghost"}" style="margin-top:6px" data-pick="${f.i}" type="button">${SEL.has(f.i)?"선택됨":"의뢰 대상"}</button></div>
+    </div>`}).join("");
+  $("selCount").textContent = SEL.size?`${SEL.size}곳 선택: ${[...SEL].map(i=>nm(i)).join(", ")}`:"아직 고른 시설이 없습니다. 최대 3곳까지 고를 수 있습니다.";
+  document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{const i=+b.dataset.pick; if(SEL.has(i))SEL.delete(i); else if(SEL.size<3)SEL.add(i); renderFacs(); renderLetter();});
+}
+
+/* ---------- 의뢰서 ---------- */
+function checklistItems(){
+  return [
+    "후견인 지정 검토: 스스로 급여를 관리하기 어려운 발달장애인은 민법상 후견인 지정을 우선 검토하고, 필요하면 발달장애인 공공후견지원사업을 이용합니다. (283쪽)",
+    "급여관리자: 후견인 지정이 늦어지면 보장기관이 급여관리자를 지정해 급여를 대신 관리하게 할 수 있습니다. (283쪽)",
+    "보장시설 수급자 선정: 생계·의료급여 수급자로 선정되어야 보장시설 생계급여가 나옵니다(기준 중위소득 40% 이하). 시설에 들어갔다는 이유만으로는 자격이 생기지 않습니다. (333·337쪽)",
+    "가구 분리: 보장시설 수급자는 별도 가구로 보장되고, 남은 가족은 부양의무자로 처리됩니다. (324쪽)",
+    "주민등록: 보장시설 입소자는 주민등록을 시설 소재지로 옮겨야 합니다. (324·332쪽)",
+    "장애인 단기거주시설과 공동생활가정은 보장시설이 아니어서, 이곳의 수급자는 보장시설 수급자가 아닌 일반 수급자로 보장됩니다. (319~320쪽)"
+  ];
+}
+$("checklist").innerHTML = checklistItems().map(x=>`<li>${esc(x)}</li>`).join("");
+function renderLetter(){
+  const s=$("selSido").value, g=$("selSgg").value, r=RESUME;
+  const picks=[...SEL].map(i=>FAC[i]);
+  const L=[];
+  L.push(`[바톤 공적 돌봄 의뢰서]`);
+  L.push(`전달: 희망 시설과 ${s} ${g} 주민센터(시군구 보장기관)에 동시 전달`);
+  L.push(`필요한 돌봄: ${NEED_LABEL[need()]}`);
+  L.push("");
+  if(r){
+    L.push(`■ 요약: ${r.요약||""}`);
+    (r.도전행동||[]).forEach((b,i)=>L.push(`■ 도전행동 ${i+1}: ${b.유형} – ${b.내용} / 빈도 ${b.빈도||"모름"} / 강도 ${b.강도||"모름"} / 촉발 ${b.촉발요인||"모름"} / 진정 ${b.진정방법||"모름"}`));
+    const c=r.의사소통||{}, l=r.일상생활||{}, m=r.의료||{};
+    L.push(`■ 의사소통: ${c.수준||"모름"}${c.방법?" ("+c.방법+")":""}`);
+    L.push(`■ 일상생활: 식사 ${l.식사||"모름"} · 용변 ${l.용변||"모름"} · 이동 ${l.이동||"모름"} · 야간 ${l.야간||"모름"}`);
+    L.push(`■ 의료: ${m.질환_복약||"모름"} / 처치 ${m.필요한_처치||"모름"}`);
+    L.push(`■ 시설에 꼭 알릴 것: ${(r.시설에_꼭_알릴_것||[]).join(", ")}`);
+  } else L.push("■ 돌봄 이력서: 아직 작성 전");
+  L.push("");
+  L.push("■ 희망 시설(일람표 2024.12 기준):");
+  if(picks.length) picks.forEach((f,i)=>L.push(`  ${i+1}. ${nm(f.i)} (${TYPE_NAME[f.type]}, 소관 ${f.sido} ${f.sgg}, 정원 ${f.cap}·현원 ${f.cur})`));
+  else L.push("  아직 선택하지 않음");
+  L.push("");
+  L.push("■ 요청: 시설은 이력서를 보고 수용 가능 여부를 회신해 주시고(거절 시 사유 필수), 시군구는 보장시설 수급자 선정과 위탁 가능 여부를 검토해 주십시오.");
+  $("letter").textContent = L.join("\n");
+}
+$("copyBtn").onclick = async ()=>{ try{ await navigator.clipboard.writeText($("letter").textContent); $("sendState").textContent="복사했습니다."; }catch(e){ $("sendState").textContent="복사가 막혀 있어 의뢰서를 직접 선택해 복사해 주세요."; } };
+
+/* 시연 화면에서 가상 회신을 실제 시설명과 분리할 때 쓰는 별칭(기본은 실제 이름) */
+const nm=i=>(window.ANON&&window.ANON[i])||FAC[i].name;
+/* ---------- 시설이 등록하는 대응 가능 돌봄 (공공데이터에 없는 정보) ---------- */
+const CAPS=[["self","자해 행동 대응"],["other","타해 행동 대응"],["night","야간 돌봄 인력"],["med","복약 관리"],["toilet","용변 도움"],["quiet","1인실·조용한 공간"]];
+const capName=k=>(CAPS.find(c=>c[0]===k)||[k,k])[1];
+const FPROF={};
+function capsNeeded(r){
+  if(!r) return [];
+  const out=new Set(), l=r.일상생활||{}, m=r.의료||{};
+  (r.도전행동||[]).forEach(b=>{ if(/자해/.test(b.유형||"")) out.add("self"); if(/타해/.test(b.유형||"")) out.add("other"); });
+  if(l.야간 && l.야간!=="모름") out.add("night");
+  if(m.질환_복약 && m.질환_복약!=="모름") out.add("med");
+  if(/도움/.test(l.용변||"")) out.add("toilet");
+  if(/조용|소리|사람 많/.test((r.선호||"")+(r.피해야_할_것||""))) out.add("quiet");
+  return [...out];
+}
+
+/* ---------- 의뢰(보호자 1회 제출 → 시설·시군구 동시) ---------- */
+const CASES=[], REFS=[];
+const REASONS=["종사자 부족","도전행동 대응 어려움","의료 처치 불가","성별·생활공간 문제","정원 없음","기타"];
+const ST_LABEL={미회신:"회신 전",수용:"수용 가능",대기:"대기",거절:"거절"};
+const ST_CLS={미회신:"",수용:"ok",대기:"warn",거절:"bad"};
+const NEED_LABEL={long:"24시간 장기 거주",short:"단기 거주",group:"소규모 공동생활"};
+const stamp=()=>{const d=new Date();return `${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`};
+function logC(c,actor,text){c.log.push({at:stamp(),actor,text})}
+const caseOf=r=>CASES.find(c=>c.id===r.caseId);
+function caseState(c){ return c.admitted?["입소 완료","ok"]: c.entrusted!=null?["위탁 결정","acc"]:["회신·검토 중","warn"]; }
+
+$("sendBtn").onclick=()=>{
+  if(!RESUME){$("sendState").textContent="먼저 돌봄 이력서를 만들어 주세요.";return;}
+  if(!SEL.size){$("sendState").textContent="먼저 시설을 1곳 이상 고르세요.";return;}
+  const s=$("selSido").value, g=$("selSgg").value;
+  const c={id:CASES.length+1,resume:RESUME,who:RESUME.요약||"돌봄 이력서",from:s+" "+g,need:need(),picks:[...SEL],checks:{q:false,g:false,h:false},entrusted:null,admitted:false,log:[],at:stamp()};
+  c.refs=c.picks.map(fi=>{const r={id:REFS.length+1,fac:fi,caseId:c.id,status:"미회신",reasons:[],note:"",aiNote:null,qs:null}; REFS.push(r); return r;});
+  logC(c,"보호자",`의뢰서 제출: 시설 ${c.picks.length}곳과 ${c.from} 주민센터에 동시 전달`);
+  CASES.push(c); SEL.clear(); renderFacs(); renderLetter(); renderRefStats();
+  location.hash="g4";
+};
+
+/* 보호자: 진행 상황 */
+function renderStatus(){
+  const c=CASES.at(-1);
+  if(!c){$("gStatus").innerHTML='<div class="card"><div class="empty">아직 보낸 의뢰가 없습니다. <a href="#g1">돌봄 이력서</a>를 만들고 시설을 골라 보내 보세요.</div></div>';return;}
+  const rep=c.refs.filter(r=>r.status!=="미회신").length, nchk=Object.values(c.checks).filter(Boolean).length, ent=c.entrusted!=null?FAC[c.entrusted]:null;
+  const st=(t,d,state)=>`<div class="tstep ${state}"><b>${t}</b><span>${d}</span></div>`;
+  const [sl,sc]=caseState(c);
+  $("gStatus").innerHTML=`
+  <div class="card">
+    <div class="btns" style="justify-content:space-between"><h2>의뢰 #${c.id} · ${esc(c.from)} · ${NEED_LABEL[c.need]}</h2><span class="pill ${sc}">${sl}</span></div>
+    <p class="sub">${esc(c.who)}</p>
+    <div class="track">
+      <div class="tcol">${st("의뢰서 제출",`${c.at} · 시설 ${c.picks.length}곳과 주민센터에 동시 전달`,"done")}</div>
+      <div class="tcol par"><em>동시 진행</em>${st("시설 사전 회신",`${rep}/${c.refs.length}곳 회신`,rep===c.refs.length?"done":"now")}${st("시군구 자격 검토",`${nchk}/3 항목 확인`,nchk===3?"done":"now")}</div>
+      <div class="tcol">${st("위탁 결정",ent?esc(nm(ent.i)):"검토와 회신이 끝나면 결정",ent?"done":"todo")}</div>
+      <div class="tcol">${st("입소",c.admitted?"입소 완료 보고됨":"위탁 후 시설이 보고",c.admitted?"done":"todo")}</div>
+    </div>
+  </div>
+  <div class="grid2e">
+    <div class="card"><h2>시설 회신</h2><div class="tablewrap"><table><tr><th>시설</th><th>회신</th><th>사유</th></tr>${c.refs.map(r=>{const f=FAC[r.fac];return `<tr${c.entrusted===r.fac?' class="hl"':""}><td>${esc(nm(f.i))}<div class="src">${esc(f.sgg)} · ${TYPE_NAME[f.type]}</div></td><td><span class="pill ${ST_CLS[r.status]}">${ST_LABEL[r.status]}</span></td><td>${r.reasons.map(esc).join(", ")||"<span class='src'>—</span>"}</td></tr>`}).join("")}</table></div></div>
+    <div class="card"><h2>처리 기록</h2><ol class="logl">${c.log.slice().reverse().map(x=>`<li><span class="src">${x.at}</span><b>${x.actor}</b><span>${esc(x.text)}</span></li>`).join("")}</ol></div>
+  </div>`;
+}
+
+/* 이력서 HTML(보호자·시설·시군구 공용) */
+function resumeHTML(r){
+  if(!r) return "";
+  const beh=(r.도전행동||[]).map(b=>`<div class="behitem"><b>${esc(b.유형)}</b> · ${esc(b.내용)}<dl class="beh" style="margin-top:4px"><dt>빈도</dt><dd>${val(b.빈도)}</dd><dt>강도</dt><dd>${val(b.강도)}</dd><dt>촉발요인</dt><dd>${val(b.촉발요인)}</dd><dt>진정방법</dt><dd>${val(b.진정방법)}</dd></dl></div>`).join("")||"<div class='src'>메모에 도전행동 내용이 없습니다.</div>";
+  const life=r.일상생활||{}, com=r.의사소통||{}, med=r.의료||{};
+  return `
+   <div class="sec"><h3>요약 <span class="pill relay">${esc(r.필요돌봄||"")}</span></h3><div>${esc(r.요약)}</div><div class="src" style="margin-top:4px">${esc(r.필요돌봄_근거||"")}</div></div>
+   <div class="sec"><h3>도전행동 <span class="pill bad">${(r.도전행동||[]).length}건</span></h3>${beh}</div>
+   <div class="sec"><h3>의사소통·일상생활</h3><div class="kv"><span>의사소통</span><span>${val(com.수준)} ${com.방법?"· "+esc(com.방법):""}</span><span>식사</span><span>${val(life.식사)}</span><span>용변</span><span>${val(life.용변)}</span><span>이동</span><span>${val(life.이동)}</span><span>야간</span><span>${val(life.야간)}</span></div></div>
+   <div class="sec"><h3>의료·선호</h3><div class="kv"><span>질환·복약</span><span>${val(med.질환_복약)}</span><span>필요한 처치</span><span>${val(med.필요한_처치)}</span><span>좋아하는 것</span><span>${val(r.선호)}</span><span>피할 것</span><span>${val(r.피해야_할_것)}</span></div></div>
+   <div class="sec"><h3>시설에 꼭 알릴 것</h3><ul class="tight">${(r.시설에_꼭_알릴_것||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+   <div class="sec"><h3>상담 때 확인할 것 <span class="pill warn">확인 필요</span></h3><ul class="tight">${(r.확인_필요||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
+}
+
+/* 시설: 들어온 의뢰 */
+async function aiQuestions(r){
+  const c=caseOf(r), f=FAC[r.fac];
+  let qs=null, how="";
+  if(SAMPLE){
+    try{ const o=await SAMPLE.json(`당신은 발달장애인 거주시설의 입소 상담 담당자입니다. 아래 돌봄 이력서만 보고, 입소 상담 때 보호자에게 꼭 물어야 할 질문 5개를 만드세요.
+규칙: 이력서의 '확인_필요'와 도전행동의 '모름' 항목을 먼저 다루고, 우리 시설 유형(${TYPE_NAME[f.type]})에서 안전하게 돌보는 데 필요한 것을 물으세요. 이력서에 없는 사실을 전제하지 마세요. 존중하는 말투로 쓰세요.
+JSON 형식으로만 답하세요: {"질문":[{"질문":"","이유":""}]}
+돌봄 이력서: ${JSON.stringify(c.resume)}`,{modelTier:"default"}); if(o&&Array.isArray(o.질문)){qs=o.질문; how="AI";} }catch(e){ qs=null; }
+  }
+  if(!qs){ qs=(c.resume.확인_필요||[]).map(x=>({질문:x.replace(/[.]$/,"")+"에 대해 알려 주실 수 있나요?",이유:"이력서에 '확인 필요'로 남은 항목"})); how="서식"; }
+  r.qs={how,list:qs};
+}
+async function aiReason(r){
+  const text=r.note.trim(); if(!text) return;
+  let codes=null, how="";
+  if(SAMPLE){
+    try{ const o=await SAMPLE.json(`시설이 발달장애인 입소 의뢰를 거절하며 적은 사유를 아래 코드로 분류하세요. 해당하는 코드를 모두 고르고, 문장에 근거가 없는 코드는 고르지 마세요.
+코드: ${REASONS.join(", ")}
+JSON 형식으로만 답하세요: {"코드":[""],"요약":"한 문장"}
+사유: """${text}"""`,{modelTier:"default"}); if(o&&Array.isArray(o.코드)){codes=o.코드.filter(x=>REASONS.includes(x)); how="AI"; r.aiNote=o.요약||"";} }catch(e){ codes=null; }
+  }
+  if(!codes){
+    const k=[["종사자 부족",/인력|종사자|교사|선생님|사람이 부족/],["도전행동 대응 어려움",/자해|타해|도전|공격|행동/],["의료 처치 불가",/의료|간호|발작|간질|처치/],["성별·생활공간 문제",/성별|남성|여성|방|공간/],["정원 없음",/정원|자리가|만실|빈자리/]];
+    codes=k.filter(([,re])=>re.test(text)).map(([c])=>c); if(!codes.length) codes=["기타"]; how="키워드";
+  }
+  r.reasons=[...new Set([...r.reasons,...codes])]; r.aiHow=how;
+}
+function renderInbox(){
+  const open=REFS.filter(r=>r.status==="미회신").length;
+  $("inboxCount").textContent=REFS.length?`${REFS.length}건 · 회신 전 ${open}건`:"";
+  if(!REFS.length){$("inbox").innerHTML='<div class="empty">도착한 의뢰가 없습니다. 보호자 화면에서 이력서를 만들고 시설을 골라 보내면 여기에 도착합니다.</div>';return;}
+  $("inbox").innerHTML=REFS.map(r=>{const f=FAC[r.fac], c=caseOf(r);
+    const entrusted=c.entrusted===r.fac, other=c.entrusted!=null&&!entrusted;
+    const capM=(FPROF[r.fac]||[]).filter(k=>capsNeeded(c.resume).includes(k));
+    let act="";
+    if(entrusted) act=c.admitted?`<div class="note okn">입소 완료를 보고했습니다. 시군구와 보호자 화면에 반영됐습니다.</div>`:`<div class="entrust"><span><b>시군구 위탁 결정이 도착했습니다.</b> 위탁받은 보장시설은 정당한 사유 없이 거부할 수 없습니다(국민기초생활 보장법 제33조, 사업안내 323쪽).</span><button class="btn sm" data-admit="${r.id}" type="button">입소 완료 보고</button></div>`;
+    else if(other) act=`<div class="src">다른 시설로 위탁이 결정됐습니다.</div>`;
+    else act=`<div class="btns"><span class="src">회신</span><button class="btn sm ${r.status==="수용"?"":"ghost"}" data-st="수용" data-r="${r.id}" type="button">수용 가능</button><button class="btn sm ${r.status==="대기"?"":"ghost"}" data-st="대기" data-r="${r.id}" type="button">대기 등록</button><button class="btn sm ${r.status==="거절"?"":"ghost"}" data-st="거절" data-r="${r.id}" type="button">거절</button></div>
+      ${r.status==="거절"?`<div class="rjbox"><label class="f" for="rn${r.id}">거절 사유를 적어 주세요(필수)</label><textarea id="rn${r.id}" data-note="${r.id}" style="min-height:70px">${esc(r.note)}</textarea><div class="btns" style="margin-top:8px"><button class="btn sm" data-classify="${r.id}" type="button">AI로 사유 분류</button><span class="src">${r.aiHow?`${r.aiHow==="AI"?"AI 분류":"키워드 분류(AI 미연결)"} 결과를 확인하고 고치세요`:"적은 문장을 표준 사유 코드로 바꿔 관할 통계에 쌓습니다"}</span></div>
+        <div class="reasons" style="margin-top:8px">${REASONS.map(x=>`<button type="button" aria-pressed="${r.reasons.includes(x)}" data-rs="${x}" data-r="${r.id}">${x}</button>`).join("")}</div>${r.aiNote?`<div class="src" style="margin-top:6px">AI 요약: ${esc(r.aiNote)}</div>`:""}</div>`:""}`;
+    return `<div class="refitem">
+      <div class="top"><div><b>${esc(nm(f.i))}</b> <span class="src">${TYPE_NAME[f.type]} · 정원 ${f.cap} · 현원 ${f.cur}</span></div><span class="pill ${ST_CLS[r.status]}">${ST_LABEL[r.status]}</span></div>
+      <div class="src">의뢰 #${c.id} · 접수 ${c.at} · 보호자 거주지 ${esc(c.from)} · ${NEED_LABEL[c.need]}${capM.length?` · 우리 시설 등록 항목과 ${capM.length}개 일치`:""}</div>
+      <div>${esc(c.who)}</div>
+      <details><summary>돌봄 이력서 보기</summary><div class="resume" style="margin-top:10px">${resumeHTML(c.resume)}</div></details>
+      <details ${r.qs?"open":""}><summary>입소 상담 질문 만들기</summary><div style="margin-top:8px">${r.qs?`<ol class="tight">${r.qs.list.map(q=>`<li><b>${esc(q.질문)}</b><div class="src">${esc(q.이유||"")}</div></li>`).join("")}</ol><div class="src">${r.qs.how==="AI"?"AI가 이력서를 보고 만든 질문입니다.":"AI 미연결: 이력서의 ‘확인 필요’ 항목으로 만든 질문입니다."}</div>`:`<button class="btn sm ghost" data-qs="${r.id}" type="button">이력서로 상담 질문 만들기</button>`}</div></details>
+      ${act}
+    </div>`}).join("");
+  const R=id=>REFS.find(x=>x.id===+id);
+  document.querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{const r=R(b.dataset.r); r.status=b.dataset.st; if(r.status!=="거절"){r.reasons=[];r.note="";r.aiNote=null;r.aiHow=null;} logC(caseOf(r),"시설",`${nm(r.fac)}: ${ST_LABEL[r.status]} 회신`); renderInbox(); renderRefStats();});
+  document.querySelectorAll("[data-rs]").forEach(b=>b.onclick=()=>{const r=R(b.dataset.r); const x=b.dataset.rs; r.reasons=r.reasons.includes(x)?r.reasons.filter(y=>y!==x):[...r.reasons,x]; renderInbox(); renderRefStats();});
+  document.querySelectorAll("[data-note]").forEach(t=>t.oninput=()=>{R(t.dataset.note).note=t.value;});
+  document.querySelectorAll("[data-classify]").forEach(b=>b.onclick=async()=>{const r=R(b.dataset.classify); b.disabled=true; b.innerHTML='<span class="spin"></span> 분류 중'; await aiReason(r); logC(caseOf(r),"시설",`${nm(r.fac)}: 거절 사유 ${r.reasons.join(", ")}`); renderInbox(); renderRefStats();});
+  document.querySelectorAll("[data-qs]").forEach(b=>b.onclick=async()=>{const r=R(b.dataset.qs); b.disabled=true; b.innerHTML='<span class="spin"></span> 만드는 중'; await aiQuestions(r); renderInbox();});
+  document.querySelectorAll("[data-admit]").forEach(b=>b.onclick=()=>{const r=R(b.dataset.admit), c=caseOf(r); c.admitted=true; logC(c,"시설",`${nm(r.fac)}: 입소 완료 보고`); renderInbox();});
+}
+
+/* 시설: 우리 시설 정보 */
+const FP_TYPES=["중증","지적","단기","공동"];
+$("fpSido").innerHTML=SIDO_ORDER.map(s=>`<option>${s}</option>`).join("");
+function fillFp(){const s=$("fpSido").value; $("fpFac").innerHTML=FAC.filter(f=>f.sido===s&&FP_TYPES.includes(f.type)).sort((a,b)=>a.sgg.localeCompare(b.sgg,"ko")||a.name.localeCompare(b.name,"ko")).map(f=>`<option value="${f.i}">${esc(f.sgg)} · ${esc(nm(f.i))}</option>`).join("");}
+let FP_INIT=false;
+function renderFprofile(){
+  if(!FP_INIT){FP_INIT=true; const first=REFS.length?FAC[REFS[0].fac]:FAC.find(f=>f.sido==="경기"&&f.sgg==="용인시"&&FP_TYPES.includes(f.type)); if(first){$("fpSido").value=first.sido; fillFp(); $("fpFac").value=first.i;} else fillFp();}
+  const f=FAC[+$("fpFac").value]; if(!f) return;
+  const a=(window.BATON_APIFAC||{})[f.i], v=f.cap-f.cur, sr=f.scap?Math.round(f.scur/f.scap*100):0;
+  $("fpPublic").innerHTML=`<div class="kv"><span>시설 유형</span><span>${TYPE_NAME[f.type]}</span><span>소관</span><span>${esc(f.sido)} ${esc(f.sgg)}</span><span>주소</span><span>${esc(f.addr)}</span><span>정원·현원</span><span>${f.cap}명 · ${f.cur}명 <span class="pill ${v>0?"ok":""}">빈자리 ${Math.max(0,v)}</span></span><span>종사자</span><span>${f.scur}/${f.scap}명 (${sr}%)</span><span>2026 목록</span><span>${a?`사회복지시설정보 API 확인${a.act?` · 채용 중 공고 ${a.act}건`:""}`:"API에서 이름으로 확인되지 않음"}</span></div><p class="src" style="margin-top:10px">정원·현원·종사자: 2025 장애인복지시설 일람표(2024.12 기준). 공공데이터에는 도전행동 대응, 야간 인력, 1인실 같은 정보가 없습니다.</p>`;
+  const cur=FPROF[f.i]||[];
+  $("fpCaps").innerHTML=CAPS.map(([k,l])=>`<label class="check capitem"><input type="checkbox" value="${k}" ${cur.includes(k)?"checked":""}> ${l}</label>`).join("");
+  $("fpState").textContent=cur.length?`등록됨: ${cur.map(capName).join(", ")}`:"";
+}
+$("fpSido").onchange=()=>{fillFp(); renderFprofile();}; $("fpFac").onchange=renderFprofile;
+$("fpSave").onclick=()=>{const fi=+$("fpFac").value; FPROF[fi]=[...document.querySelectorAll("#fpCaps input:checked")].map(x=>x.value); $("fpState").textContent=FPROF[fi].length?`등록했습니다. 보호자의 시설 찾기에 반영됩니다.`:"등록한 항목이 없습니다."; renderFacs();};
+
+/* 공무원: 의뢰 처리 */
+const CHECKS=[["q","보장시설 수급자 선정 검토","기준 중위소득 40% 이하로 선정된 사람에게 보장시설 생계급여가 나갑니다. 입소만으로는 자격이 생기지 않습니다(337·333쪽)."],["g","후견·급여관리 확인","의사무능력자는 후견인 지정을 우선 검토하고, 어려우면 급여관리자를 지정합니다(283쪽)."],["h","가구 분리·주민등록 안내","보장시설 수급자는 별도 가구로 보장하고 주민등록을 변경합니다(324쪽)."]];
+const PICK={};
+function renderCases(){
+  if(!CASES.length){$("cases").innerHTML='<div class="card"><div class="empty">접수된 의뢰가 없습니다. 보호자 화면에서 의뢰를 보내면 여기로 들어옵니다.</div></div>';return;}
+  $("cases").innerHTML=CASES.slice().reverse().map(c=>{
+    const [sl,sc]=caseState(c), ok=c.refs.filter(r=>r.status==="수용"), all=Object.values(c.checks).every(Boolean);
+    const ent=c.entrusted!=null?FAC[c.entrusted]:null, pick=PICK[c.id]??(ok[0]?ok[0].fac:null);
+    const nonGuar=ent&&["단기","공동"].includes(ent.type);
+    return `<div class="card">
+      <div class="btns" style="justify-content:space-between"><h2>의뢰 #${c.id} · ${esc(c.from)} · ${NEED_LABEL[c.need]}</h2><span class="pill ${sc}">${sl}</span></div>
+      <p class="sub" style="margin-bottom:6px">접수 ${c.at} · ${esc(c.who)}</p>
+      <details><summary>돌봄 이력서 보기</summary><div class="resume" style="margin-top:10px">${resumeHTML(c.resume)}</div></details>
+      <div class="grid2e" style="margin-top:14px">
+        <div><h3 style="margin-bottom:8px">시설 사전 회신</h3><div class="tablewrap"><table><tr><th>시설</th><th class="r">정원·현원</th><th>회신</th><th>사유</th></tr>${c.refs.map(r=>{const f=FAC[r.fac];return `<tr${c.entrusted===r.fac?' class="hl"':""}><td>${esc(nm(f.i))}<div class="src">${esc(f.sgg)} · ${TYPE_NAME[f.type]}</div></td><td class="r num">${f.cap}·${f.cur}</td><td><span class="pill ${ST_CLS[r.status]}">${ST_LABEL[r.status]}</span></td><td>${r.reasons.map(esc).join(", ")||"<span class='src'>—</span>"}</td></tr>`}).join("")}</table></div><p class="src" style="margin-top:6px">정원·현원은 2025 일람표(2024.12 기준).</p></div>
+        <div><h3 style="margin-bottom:8px">자격 검토</h3>
+          <div class="chk">${CHECKS.map(([k,t,d])=>`<label class="check chkitem"><input type="checkbox" data-ck="${c.id}:${k}" ${c.checks[k]?"checked":""} ${ent?"disabled":""}><span><b>${t}</b><span class="src">${d}</span></span></label>`).join("")}</div>
+          <h3 style="margin:14px 0 8px">위탁 결정</h3>
+          ${ent?`<div class="note okn"><b>${esc(nm(ent.i))}</b>에 ${nonGuar?"이용 결정을":"위탁을"} 통보했습니다.${nonGuar?" 단기거주시설·공동생활가정은 보장시설이 아니어서 일반 수급자로 보장합니다(319~320쪽).":" 위탁받은 보장시설은 정당한 사유 없이 거부할 수 없습니다(법 제33조, 323쪽)."}${c.admitted?" 시설이 입소 완료를 보고했습니다.":""}</div>`:
+            ok.length?`<div class="radio" style="flex-direction:column;align-items:stretch">${ok.map(r=>`<label><input type="radio" name="pk${c.id}" data-pk="${c.id}:${r.fac}" ${pick===r.fac?"checked":""}> ${esc(nm(r.fac))} <span class="src">수용 가능 회신</span></label>`).join("")}</div>
+            <div class="btns" style="margin-top:10px"><button class="btn" data-ent="${c.id}" type="button" ${all?"":"disabled"}>위탁 결정 통보</button><span class="src">${all?"보호자와 시설에 함께 알립니다.":"자격 검토 3개 항목을 확인하면 통보할 수 있습니다."}</span></div>`
+            :`<div class="empty" style="text-align:left">아직 ‘수용 가능’으로 회신한 시설이 없습니다. 회신 ${c.refs.filter(r=>r.status!=="미회신").length}/${c.refs.length}곳.</div>`}
+        </div>
+      </div>
+    </div>`}).join("");
+  document.querySelectorAll("[data-ck]").forEach(x=>x.onchange=()=>{const [id,k]=x.dataset.ck.split(":"); const c=CASES.find(c=>c.id===+id); c.checks[k]=x.checked; if(x.checked) logC(c,"시군구",`${CHECKS.find(z=>z[0]===k)[1]} 확인`); renderCases();});
+  document.querySelectorAll("[data-pk]").forEach(x=>x.onchange=()=>{const [id,fi]=x.dataset.pk.split(":"); PICK[+id]=+fi;});
+  document.querySelectorAll("[data-ent]").forEach(b=>b.onclick=()=>{const c=CASES.find(c=>c.id===+b.dataset.ent); const ok=c.refs.filter(r=>r.status==="수용"); const fi=PICK[c.id]??ok[0].fac; c.entrusted=fi; logC(c,"시군구",`${nm(fi)}에 위탁 결정 통보`); renderCases();});
+}
+
+function renderRefStats(){
+  if(!REFS.length){$("refStats").innerHTML='<div class="empty">아직 의뢰 기록이 없습니다. 부모 화면에서 의뢰를 보내고 시설 화면에서 회신하면, 수용률과 거절 사유가 여기에 실시간으로 집계됩니다.</div>';return;}
+  const st={수용:0,대기:0,거절:0,미회신:0}; const rs={}; REFS.forEach(r=>{st[r.status]++; r.reasons.forEach(x=>rs[x]=(rs[x]||0)+1)});
+  const mx=Math.max(1,...Object.values(rs));
+  $("refStats").innerHTML = `<div class="btns" style="margin-bottom:10px"><span class="pill ok">수용 ${st.수용}</span><span class="pill warn">대기 ${st.대기}</span><span class="pill bad">거절 ${st.거절}</span><span class="src">총 ${REFS.length}건 (이 화면에서 만든 데모 기록)</span></div>`+
+   (Object.keys(rs).length? REASONS.filter(x=>rs[x]).map(x=>`<div style="display:grid;grid-template-columns:150px 1fr 30px;gap:8px;align-items:center;font-size:13px;margin:4px 0"><span>${x}</span><div class="bar" style="width:100%;margin:0"><i style="width:${rs[x]/mx*100}%;background:var(--bad)"></i></div><span class="num">${rs[x]}</span></div>`).join("") : '<div class="src">거절 사유가 아직 없습니다.</div>');
+}
+
+/* ---------- 레이더 ---------- */
+function renderRadar(){
+  const t=tot;
+  $("tiles").innerHTML = [
+    ["장애인 거주시설",fmt(FAC.length)+"곳","2024.12"],
+    ["정원",fmt(t.cap)+"명","현원 "+fmt(t.cur)+"명"],
+    ["빈자리",fmt(t.cap-t.cur)+"석",((t.cap-t.cur)/t.cap*100).toFixed(1)+"%가 비어 있음",true],
+    ["종사자 결원",fmt(t.scap-t.scur)+"명",`${fmt(t.short)}곳(${(t.short/FAC.length*100).toFixed(1)}%)이 정원 미달`],
+    ["단기거주시설 없는 시군구",noShort.length+"곳",`229곳 중 ${(noShort.length/sggKeys.length*100).toFixed(0)}%`,true]
+  ].map(x=>`<div class="tile ${x[3]?"alert":""}"><div class="k">${x[0]}</div><div class="v">${x[1]}</div><div class="src">${x[2]}</div></div>`).join("");
+  drawTrend(); drawType(); drawSido(); drawGap(); renderRefStats();
+}
+function drawTrend(){
+  const yrs=["2020","2021","2022","2023","2024","2025"];
+  const v=yrs.map(y=>tr[y].data["입소인원"]["전국"]), n=yrs.map(y=>tr[y].data["시설 수"]["전국"]);
+  const W=560,H=236,p={l:56,r:24,t:18,b:44}; const lo=26000,hi=29500;
+  const x=i=>p.l+(W-p.l-p.r)*i/(yrs.length-1), y=val=>H-p.b-(H-p.t-p.b)*(val-lo)/(hi-lo);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="입소인원 추이">`;
+  for(let g=26000; g<=29500; g+=1000){s+=`<line x1="${p.l}" x2="${W-p.r}" y1="${y(g)}" y2="${y(g)}" stroke="${css("--line")}"/><text class="numt" x="${p.l-8}" y="${y(g)+4}" text-anchor="end">${fmt(g)}</text>`}
+  const pts=v.map((val,i)=>`${x(i)},${y(val)}`).join(" ");
+  s+=`<polygon points="${x(0)},${H-p.b} ${pts} ${x(yrs.length-1)},${H-p.b}" fill="${css("--accent")}" opacity=".10"/>`;
+  s+=`<polyline points="${pts}" fill="none" stroke="${css("--accent")}" stroke-width="2.5"/>`;
+  v.forEach((val,i)=>{s+=`<circle cx="${x(i)}" cy="${y(val)}" r="${i===v.length-1?5:3.5}" fill="${i===v.length-1?css("--relay"):css("--accent")}"/><text class="numt" x="${x(i)}" y="${y(val)-10}" text-anchor="middle" style="fill:${css("--ink")}">${fmt(val)}</text><text x="${x(i)}" y="${H-24}" text-anchor="middle" style="fill:${css("--ink")}">${yrs[i]}</text><text class="numt" x="${x(i)}" y="${H-8}" text-anchor="middle">${fmt(n[i])}곳</text>`});
+  s+=`</svg>`; $("trendChart").innerHTML=s;
+}
+function drawType(){
+  const order=["중증","지적","공동","단기","지체","시각","영유아","청각"];
+  const agg={}; FAC.forEach(f=>{const a=agg[f.type]=agg[f.type]||{cap:0,cur:0};a.cap+=f.cap;a.cur+=f.cur});
+  const W=560,rowH=24,p={l:150,r:110,t:6}; const H=p.t+order.length*rowH+6; const mx=Math.max(...order.map(t=>agg[t].cap));
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="시설 종류별 빈자리">`;
+  order.forEach((t,i)=>{const a=agg[t],yy=p.t+i*rowH,w=(W-p.l-p.r);const wc=w*a.cur/mx, wv=w*(a.cap-a.cur)/mx;
+    s+=`<text x="${p.l-8}" y="${yy+15}" text-anchor="end" style="fill:${css("--ink")}">${TYPE_NAME[t].replace(" 거주시설","").replace("장애인 ","")}</text>`;
+    s+=`<rect x="${p.l}" y="${yy+4}" width="${wc}" height="14" rx="3" fill="${css("--accent")}" opacity=".35"/>`;
+    s+=`<rect x="${p.l+wc}" y="${yy+4}" width="${Math.max(1,wv)}" height="14" rx="3" fill="${css("--relay")}"/>`;
+    s+=`<text class="numt" x="${p.l+wc+wv+6}" y="${yy+15}">${fmt(a.cap-a.cur)}석 (${((a.cap-a.cur)/a.cap*100).toFixed(1)}%)</text>`;});
+  s+=`</svg><div class="legend"><span><i style="background:${css("--accent")};opacity:.35"></i>현원</span><span><i style="background:${css("--relay")}"></i>빈자리(정원−현원)</span></div>`;
+  $("typeChart").innerHTML=s;
+}
+function drawSido(){
+  const rows=SIDO_ORDER.map(s=>{const fs=FAC.filter(f=>f.sido===s);const cap=fs.reduce((a,f)=>a+f.cap,0),cur=fs.reduce((a,f)=>a+f.cur,0),scap=fs.reduce((a,f)=>a+f.scap,0),scur=fs.reduce((a,f)=>a+f.scur,0);
+    const dev=fs.filter(f=>DEV.has(f.type)).reduce((a,f)=>a+f.cap,0); const sev=D.regSido[s][1];
+    const sg=sggKeys.filter(k=>k.startsWith(s+"|")); const ns=sg.filter(k=>!hasType(k,"단기")).length;
+    return {s,n:fs.length,cap,cur,vac:cap-cur,scap,scur,dev,sev,per:dev/sev*1000,sg:sg.length,ns}});
+  const mn=Math.min(...rows.map(r=>r.per)), mxp=Math.max(...rows.map(r=>r.per));
+  $("sidoTable").innerHTML=`<tr><th>시도</th><th class="r">시설</th><th class="r">정원</th><th class="r">현원</th><th class="r">빈자리</th><th class="r">종사자 충원</th><th class="r">심한 장애 등록장애인</th><th class="r">발달 관련 거주 정원</th><th class="r">심한 장애 1천 명당</th><th class="r">단기거주 없는 시군구</th></tr>`+
+   rows.map(r=>`<tr class="${r.per===mn?"hl":""}"><td>${r.s}</td><td class="r num">${fmt(r.n)}</td><td class="r num">${fmt(r.cap)}</td><td class="r num">${fmt(r.cur)}</td><td class="r num">${fmt(r.vac)}</td><td class="r num">${(r.scur/r.scap*100).toFixed(1)}%</td><td class="r num">${fmt(r.sev)}</td><td class="r num">${fmt(r.dev)}</td><td class="r num"><b>${r.per.toFixed(1)}</b>${r.per===mn?' <span class="pill relay">최저</span>':r.per===mxp?' <span class="pill">최고</span>':""}</td><td class="r num">${r.ns} / ${r.sg}</td></tr>`).join("");
+}
+function drawGap(){
+  const list=noShort.map(k=>({k,sev:D.reg[k][1],day:(D.day[k]||[0])[0],lg:(bySgg[k]||[]).filter(f=>f.type==="지적"||f.type==="중증").length})).sort((a,b)=>b.sev-a.sev);
+  const both=list.filter(x=>x.day===0).length;
+  $("gapSub").textContent=`229개 시군구 중 ${list.length}곳. 이 지역들의 심한 장애 등록장애인은 ${fmt(list.reduce((a,x)=>a+x.sev,0))}명이며, ${both}곳은 주간이용시설도 없습니다. 심한 장애 인구가 많은 순 상위 12곳.`;
+  $("gapTable").innerHTML=`<tr><th>시군구</th><th class="r">심한 장애</th><th class="r">주간이용시설</th><th class="r">지적·중증 거주시설</th></tr>`+
+    list.slice(0,12).map(x=>`<tr><td>${x.k.replace("|"," ")}</td><td class="r num">${fmt(x.sev)}</td><td class="r num">${x.day}</td><td class="r num">${x.lg}</td></tr>`).join("");
+}
+
+/* ---------- 보조금 ---------- */
+function drawTier(){
+  const W=560,H=200,p={l:60,r:20,t:24,b:34}; const lo=300000,hi=360000;
+  const bw=(W-p.l-p.r)/TIERS.length;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="보장시설 수급자 1인당 월 생계급여">`;
+  for(let g=300000; g<=360000; g+=20000){const yy=H-p.b-(H-p.t-p.b)*(g-lo)/(hi-lo); s+=`<line x1="${p.l}" x2="${W-p.r}" y1="${yy}" y2="${yy}" stroke="${css("--line")}"/><text class="numt" x="${p.l-8}" y="${yy+4}" text-anchor="end">${fmt(g/10000)}만</text>`}
+  TIERS.forEach((t,i)=>{const h=(H-p.t-p.b)*(t.amt-lo)/(hi-lo), xx=p.l+i*bw+bw*.2, yy=H-p.b-h;
+    s+=`<rect x="${xx}" y="${yy}" width="${bw*.6}" height="${h}" rx="4" fill="${i===0?css("--accent"):css("--accent")}" opacity="${1-i*.18}"/><text class="numt" x="${xx+bw*.3}" y="${yy-6}" text-anchor="middle" style="fill:${css("--ink")}">${fmt(t.amt)}</text><text x="${xx+bw*.3}" y="${H-12}" text-anchor="middle">${t.label}</text>`});
+  s+=`<text x="${p.l}" y="12">원/인·월 (세로축은 30만 원부터)</text></svg>`;
+  $("tierChart").innerHTML=s;
+}
+const fFacs = FAC.filter(f=>f.type==="중증"||f.type==="지적").sort((a,b)=>a.sido===b.sido?a.name.localeCompare(b.name,"ko"):SIDO_ORDER.indexOf(a.sido)-SIDO_ORDER.indexOf(b.sido));
+$("fFac").innerHTML=fFacs.map(f=>`<option value="${f.i}">${f.sido} · ${esc(f.name)} (현원 ${f.cur})</option>`).join("");
+function pickFac(){const f=FAC[+$("fFac").value]; $("fRecip").value=f.cur; $("fFacInfo").textContent=`${TYPE_NAME[f.type]} · 소관 ${f.sido} ${f.sgg} · 정원 ${f.cap} · 현원 ${f.cur} · 종사자 ${f.scur}/${f.scap}명 (일람표 PDF ${f.page}쪽). 수급자 현원은 공개 자료에 없어 기본값으로 현원을 넣었습니다. 실제 수급자 수로 고쳐 쓰세요.`; calcFund();}
+function calcFund(){
+  const n=Math.max(0,+$("fRecip").value||0), sv=Math.max(0,+$("fSevere").value||0), u=Math.max(0,+$("fUnit").value||0), a=Math.max(0,+$("fAccept").value||0), b=Math.max(0,+$("fBonus").value||0);
+  const tier=TIERS.find(t=>n<t.lt); const now=n*tier.amt;
+  $("fNow").textContent=won(now); $("fNowNote").textContent=`${tier.label} 구간 × ${fmt(tier.amt)}원 × ${fmt(n)}명`;
+  const add=Math.min(sv,n)*u+a*b; $("fAdd").textContent=won(add); $("fAddNote").textContent=`${fmt(Math.min(sv,n))}명 × ${fmt(u)}원 + ${fmt(a)}건 × ${fmt(b)}원 (예시 입력)`;
+}
+$("fFac").onchange=pickFac; ["fRecip","fSevere","fUnit","fAccept","fBonus"].forEach(id=>$(id).oninput=calcFund);
+const firstSeoul=fFacs.find(f=>f.sido==="서울"&&f.type==="중증"); if(firstSeoul) $("fFac").value=firstSeoul.i;
+
+/* ---------- 정부: 관할 업무 (2026 API) ---------- */
+const AP = window.BATON_API || null;
+const STAGE = ["장기거주","단기거주","공동생활가정","주간이용"];
+const STAGE_CLS = ["acc","relay","ok",""];
+// 2026.7.1 인천 행정체제 개편: 등록장애인(2025) 구역과 맞추기 위한 대응. 제물포구는 중구 원도심+동구 통합이라 두 구 모두에 표시
+const LEGACY = {"인천|영종구":["인천|중구"],"인천|검단구":["인천|서구"],"인천|서해구":["인천|서구"],"인천|제물포구":["인천|중구","인천|동구"],"세종|세종특별자치시":["세종|세종시"]};
+const API = AP ? AP.api.map(r=>({sido:r[0],sgg:r[1],name:r[2],st:r[3],fi:r[4],linked:r[5],act:r[6],jobs:r[7]})) : [];
+const apiBy = {};
+// 신설 구 시설이 2024 일람표와 연결되면 그 시설의 2024 소관 구로, 아니면 위 대응표로 배정
+API.forEach(a=>{const k=a.sido+"|"+a.sgg; const ks = LEGACY[k] ? (a.fi>=0 ? [FAC[a.fi].sido+"|"+FAC[a.fi].sgg] : LEGACY[k]) : [k]; ks.forEach(kk=>(apiBy[kk]=apiBy[kk]||[]).push(a))});
+const apiByFac = {}; API.forEach(a=>{if(a.fi>=0) apiByFac[a.fi]=a}); window.BATON_APIFAC = apiByFac;
+const ilamOnlyBy = {}; (AP?AP.ilamOnly:[]).forEach(r=>{const k=r[0]+"|"+r[1];(ilamOnlyBy[k]=ilamOnlyBy[k]||[]).push({name:r[2],st:r[3]})});
+const asofTxt = AP ? `${AP.asof.slice(0,4)}.${AP.asof.slice(4,6)}.${AP.asof.slice(6)}` : "";
+const noShort26 = AP ? sggKeys.filter(k=>!(apiBy[k]||[]).some(a=>a.st===1)) : [];
+const noShortDay26 = noShort26.filter(k=>!(apiBy[k]||[]).some(a=>a.st===3));
+const ALL="(시도 전체)";
+
+$("oSido").innerHTML = SIDO_ORDER.map(s=>`<option>${s}</option>`).join("");
+function fillOSgg(){const s=$("oSido").value;$("oSgg").innerHTML=[ALL,...(sidoSgg[s]||[]).slice().sort((a,b)=>a.localeCompare(b,"ko"))].map(g=>`<option>${g}</option>`).join("")}
+$("oSido").value="경기"; fillOSgg(); $("oSgg").value="용인시";
+$("oSido").onchange=()=>{fillOSgg();renderOffice()}; $("oSgg").onchange=renderOffice;
+
+function area(){
+  const s=$("oSido").value, g=$("oSgg").value, all=g===ALL;
+  const keys = all ? sggKeys.filter(k=>k.startsWith(s+"|")) : [s+"|"+g];
+  const seen=new Set(), api=[];
+  keys.forEach(k=>(apiBy[k]||[]).forEach(a=>{if(!seen.has(a)){seen.add(a);api.push(a)}}));
+  if(all) API.filter(a=>a.sido===s&&!seen.has(a)).forEach(a=>{seen.add(a);api.push(a)}); // 도 소관 등
+  const gone = keys.flatMap(k=>ilamOnlyBy[k]||[]);
+  const sev = keys.reduce((n,k)=>n+(D.reg[k]?D.reg[k][1]:0),0);
+  const fac = FAC.filter(f=>keys.includes(f.sido+"|"+f.sgg));
+  const linkedRes = api.filter(a=>a.fi>=0).map(a=>FAC[a.fi]);
+  const byStage = STAGE.map((_,i)=>api.filter(a=>a.st===i).length);
+  const hiring = api.filter(a=>a.act>0);
+  const gaps = keys.filter(k=>noShort26.includes(k));
+  const newOnes = api.filter(a=>!a.linked);
+  return {s,g,all,label: all? s+" 전체" : s+" "+g, keys,api,gone,sev,fac,linkedRes,byStage,hiring,gaps,newOnes};
+}
+
+function renderOffice(){
+  if(!AP){$("oTiles").innerHTML='<div class="empty" style="grid-column:1/-1">2026 API 데이터(data_api.js)가 없습니다. 프로젝트에서 fetch_facility_api.py → match_api_to_ilam.py → build_web_api_data.py 를 실행하세요.</div>';return;}
+  const A=area();
+  $("oAsof").textContent=`시설 목록: 사회복지시설정보 API, ${asofTxt} 조회`;
+  const vac = A.linkedRes.reduce((n,f)=>n+Math.max(0,f.cap-f.cur),0);
+  const tiles=[
+    ["심한 장애 등록장애인", fmt(A.sev)+"명", "모든 장애유형, 2025"],
+    ["돌봄 시설 (2026 API)", fmt(A.api.length)+"곳", STAGE.map((s,i)=>s.replace("생활가정","")+" "+A.byStage[i]).join(" · ")],
+    ["단기거주시설", A.byStage[1]+"곳", A.all? `없는 시군구 ${A.gaps.length}곳 / ${A.keys.length}곳` : (A.byStage[1]? "보호자 부재 시 긴급 의뢰처" : "관할 안에 없음 → 인근 시군구 의뢰"), !A.all&&!A.byStage[1] || A.all&&A.gaps.length>0],
+    ["채용 중 시설", A.hiring.length+"곳", `마감 전 구인 공고 ${A.hiring.reduce((n,a)=>n+a.act,0)}건 (${asofTxt})`],
+    ["거주시설 빈자리", fmt(vac)+"석", "2026 API로 확인된 거주시설의 2024.12 정원−현원"]
+  ];
+  $("oTiles").innerHTML = tiles.map(x=>`<div class="tile ${x[3]?"alert":""}"><div class="k">${x[0]}</div><div class="v">${x[1]}</div><div class="src">${x[2]}</div></div>`).join("");
+
+  const rows = A.api.slice().sort((a,b)=>a.st-b.st || (b.act-a.act) || a.name.localeCompare(b.name,"ko"));
+  const LIM=80;
+  $("oFacSub").textContent = `${A.label} · 2026 API ${A.api.length}곳${A.gone.length?` · 2024 일람표에만 있는 곳 ${A.gone.length}곳`:""}${rows.length>LIM?` · 앞의 ${LIM}곳만 표시`:""}`;
+  $("oFacTable").innerHTML = `<tr><th>단계</th><th>시설</th><th class="r">정원·현원(2024.12)</th><th class="r">종사자</th><th>2026 확인</th></tr>`+
+    rows.slice(0,LIM).map(a=>{const f=a.fi>=0?FAC[a.fi]:null; const sr=f&&f.scap?Math.round(f.scur/f.scap*100):null;
+      return `<tr><td><span class="pill ${STAGE_CLS[a.st]}">${STAGE[a.st]}</span></td><td>${esc(a.name)}${a.sgg&&A.all?` <span class="src">${esc(a.sgg)}</span>`:""}${a.sgg==="제물포구"?` <span class="src">제물포구</span>`:""}</td>
+      <td class="r num">${f?`${f.cap}·${f.cur}${f.cap>f.cur?` <span class="pill ok">빈 ${f.cap-f.cur}</span>`:""}`:"<span class='src'>—</span>"}</td>
+      <td class="r num">${f?`<span class="pill ${sr>=100?"ok":sr>=80?"warn":"bad"}">${f.scur}/${f.scap}</span>`:"<span class='src'>—</span>"}</td>
+      <td>${a.linked?'<span class="pill ok">목록 일치</span>':'<span class="pill relay">신규·명칭 변경</span>'}${a.act?`<span class="pill warn">채용 중 ${a.act}</span>`:""}</td></tr>`}).join("")+
+    A.gone.map(x=>`<tr><td><span class="pill">${STAGE[x.st]}</span></td><td>${esc(x.name)}</td><td colspan="2" class="src">2024 일람표에만 있음</td><td><span class="pill bad">확인 필요</span></td></tr>`).join("");
+  $("oFacNote").innerHTML = `‘목록 일치’는 같은 시도·같은 돌봄 단계 안에서 시설명이 같거나 한쪽 이름이 다른 쪽을 포함하는 경우입니다(전국 ${fmt(AP.report["합계"]["연결"])}곳, 일람표 기준 ${AP.report["합계"]["연결률_일람표기준(%)"]}%). ‘신규·명칭 변경’과 ‘확인 필요’는 이름으로 연결되지 않았다는 뜻일 뿐, 신설·폐지를 확정한 것은 아닙니다. 정원·현원은 API에 없어 일람표 값을 씁니다. 인천은 2026.7.1 행정체제 개편으로 신설된 구(영종·검단·서해·제물포)를 2025 통계 구역에 맞춰 보여 줍니다.`;
+
+  const flow=[
+    ["의뢰 접수","부모가 돌봄 이력서(도전행동·의사소통·야간·의료)와 희망 시설을 담은 의뢰서를 보냅니다. 처음부터 같은 양식으로 들어옵니다.",1],
+    ["수급 자격 검토","보장시설 생계급여는 보장시설 수급자 선정기준(기준 중위소득 40% 이하) 절차로 결정된 입소자에게 지급합니다(337쪽). 보장시설에 입소했다는 이유만으로는 수급자격이 생기지 않습니다(333쪽).",0],
+    ["후견·급여관리 확인","의사무능력자는 민법상 후견인 지정을 우선 검토하고, 지정이 어렵거나 오래 걸리면 급여관리자를 지정할 수 있습니다(283쪽).",0],
+    ["보장시설에 급여 위탁","장애인거주시설은 보장시설입니다(단기거주시설·공동생활가정 제외, 320쪽). 위탁받은 보장시설은 정당한 사유 없이 거부할 수 없습니다[법 제33조, 제50조](323쪽).",0],
+    ["입소 후 처리","보장시설 입소자는 주민등록을 변경하고, 보장시설 수급자는 별도 보장가구로 인정합니다(324쪽).",0],
+    ["회신·사유 기록","시설은 수용·대기·거절로 회신하고, 거절하면 사유를 하나 이상 남깁니다. ‘정당한 사유’가 무엇이었는지가 처음으로 데이터가 됩니다.",1]
+  ];
+  $("oFlow").innerHTML = flow.map(f=>`<li class="${f[2]?"baton":""}"><div><b>${f[0]} ${f[2]?'<span class="pill relay">바톤</span>':""}</b><span class="src" style="font-size:14px;color:var(--ink2)">${f[1]}</span></div></li>`).join("");
+  const st={수용:0,대기:0,거절:0,미회신:0}; REFS.forEach(r=>st[r.status]++);
+  $("oRefs").innerHTML = REFS.length? `<div class="btns"><span class="src">이 화면에서 오간 의뢰</span><span class="pill ok">수용 ${st.수용}</span><span class="pill warn">대기 ${st.대기}</span><span class="pill bad">거절 ${st.거절}</span></div>` : `<div class="empty">부모 화면에서 의뢰를 보내면 처리 현황이 여기에 표시됩니다.</div>`;
+}
+
+/* 보고서: 수치는 여기서 계산, AI는 문장만 */
+function reportFacts(){
+  const A=area();
+  const shortNames = A.api.filter(a=>a.st===1).map(a=>a.name);
+  const st={수용:0,대기:0,거절:0,미회신:0}, rs={}; REFS.forEach(r=>{st[r.status]++; r.reasons.forEach(x=>rs[x]=(rs[x]||0)+1)});
+  return {
+    관할:A.label, 기준일:asofTxt,
+    심한장애_등록장애인:A.sev,
+    돌봄시설_2026API:{합계:A.api.length, 장기거주:A.byStage[0], 단기거주:A.byStage[1], 공동생활가정:A.byStage[2], 주간이용:A.byStage[3]},
+    단기거주시설_이름:shortNames.slice(0,6),
+    단기거주시설_없는_시군구: A.all? A.gaps.map(k=>k.split("|")[1]) : (A.byStage[1]?[]:[A.g]),
+    단기거주시설_없는_시군구_전국:noShort26.length,
+    채용중_시설:A.hiring.length, 채용중_공고:A.hiring.reduce((n,a)=>n+a.act,0),
+    채용중_시설_이름:A.hiring.sort((a,b)=>b.act-a.act).slice(0,5).map(a=>a.name),
+    거주시설_빈자리_2024:A.linkedRes.reduce((n,f)=>n+Math.max(0,f.cap-f.cur),0),
+    거주시설_종사자_결원_2024:A.linkedRes.reduce((n,f)=>n+Math.max(0,f.scap-f.scur),0),
+    목록변화:{API에만:A.newOnes.length, 일람표에만:A.gone.length, API에만_예:A.newOnes.slice(0,3).map(a=>a.name), 일람표에만_예:A.gone.slice(0,3).map(x=>x.name)},
+    의뢰_데모기록:{건수:REFS.length, ...st, 거절사유:rs}
+  };
+}
+function templateReport(F){
+  const L=[], S=F.돌봄시설_2026API;
+  L.push(`${F.관할} 발달장애인 돌봄 자원 주간 현황`);
+  L.push(`(기준: 시설 목록 ${F.기준일} 사회복지시설정보 API, 정원·현원 2024.12 일람표)`,"");
+  L.push("□ 현황");
+  L.push(` ○ 심한 장애 등록장애인 ${fmt(F.심한장애_등록장애인)}명(2025, 모든 장애유형)`);
+  L.push(` ○ 돌봄 시설 ${S.합계}곳: 장기거주 ${S.장기거주}, 단기거주 ${S.단기거주}, 공동생활가정 ${S.공동생활가정}, 주간이용 ${S.주간이용}`);
+  L.push(` ○ 거주시설 빈자리 ${fmt(F.거주시설_빈자리_2024)}석, 종사자 결원 ${fmt(F.거주시설_종사자_결원_2024)}명(2024.12 일람표)`,"");
+  L.push("□ 주요 사항");
+  if(F.단기거주시설_없는_시군구.length) L.push(` ○ 단기거주시설 없는 시군구 ${F.단기거주시설_없는_시군구.length}곳: ${F.단기거주시설_없는_시군구.slice(0,10).join(", ")}${F.단기거주시설_없는_시군구.length>10?" 등":""}`, `  - 보호자 입원·사망 등 긴급 상황 시 관할 밖 의뢰 필요(전국 ${F.단기거주시설_없는_시군구_전국}곳)`);
+  else L.push(` ○ 단기거주시설 ${S.단기거주}곳 운영: ${F.단기거주시설_이름.join(", ")}`);
+  L.push(` ○ 채용 중 시설 ${F.채용중_시설}곳(마감 전 공고 ${F.채용중_공고}건)${F.채용중_시설_이름.length?": "+F.채용중_시설_이름.join(", "):""}`);
+  L.push(`  - 채용 중 시설은 인력 사정으로 신규 입소 여력이 제한될 수 있어 의뢰 전 확인 필요`);
+  L.push(` ○ 시설 목록 변화: 2026 API에만 ${F.목록변화.API에만}곳, 2024 일람표에만 ${F.목록변화.일람표에만}곳`);
+  L.push(`  - 이름으로 연결되지 않은 시설로, 신설·폐지 여부는 확인 필요`,"");
+  L.push("□ 조치 계획(안)");
+  L.push(" ○ 이름으로 연결되지 않은 시설의 운영 여부 확인");
+  if(F.단기거주시설_없는_시군구.length) L.push(" ○ 단기거주시설 공백 지역의 인근 시군구 긴급 의뢰처 사전 지정");
+  L.push(" ○ 의뢰 회신 시 거절 사유 기록 안내(시설 대상)");
+  if(F.의뢰_데모기록.건수) L.push("",`※ 이번 주 의뢰 ${F.의뢰_데모기록.건수}건: 수용 ${F.의뢰_데모기록.수용}, 대기 ${F.의뢰_데모기록.대기}, 거절 ${F.의뢰_데모기록.거절}(데모 기록)`);
+  return L.join("\n");
+}
+function renderRpt(r,F){
+  if(typeof r==="string") return r;
+  const L=[r.제목||`${F.관할} 발달장애인 돌봄 자원 주간 현황`, `(기준: 시설 목록 ${F.기준일} 사회복지시설정보 API, 정원·현원 2024.12 일람표)`,""];
+  (r.항목||[]).forEach(h=>{L.push("□ "+h.제목); (h.요점||[]).forEach(p=>{L.push(" ○ "+p.문장); (p.세부||[]).forEach(d=>L.push("  - "+d))}); L.push("")});
+  return L.join("\n").trim();
+}
+$("oRptBtn").onclick = async ()=>{
+  const F=reportFacts(); $("oRptBtn").disabled=true; $("oRptState").innerHTML='<span class="spin"></span> 작성 중';
+  let out=null, how="";
+  if(SAMPLE){
+    const prompt=`당신은 시군구 장애인복지 담당 주무관입니다. 아래 JSON 수치만 사용해 과장에게 올리는 주간 현황 보고서 초안을 개조식으로 쓰세요.
+규칙: 1) JSON에 없는 숫자·시설명·사실을 만들지 마세요. 2) 문장은 '~임', '~필요', '~예정' 같은 개조식 종결. 3) 항목은 '현황', '주요 사항', '조치 계획(안)' 세 개. 4) 조치 계획은 수치에서 바로 나오는 확인·의뢰 업무만, 예산·법 개정 같은 큰 주장은 쓰지 마세요. 5) 이름으로 연결되지 않은 시설은 '확인 필요'로만 표현하고 폐지·신설로 단정하지 마세요. 6) 의뢰_데모기록 건수가 0이면 의뢰 이야기는 쓰지 마세요.
+출력 JSON 형식: {"제목":"","항목":[{"제목":"현황","요점":[{"문장":"","세부":[""]}]}]}
+수치: ${JSON.stringify(F)}`;
+    try{ out = await SAMPLE.json(prompt,{modelTier:"default"}); how="AI 초안"; }
+    catch(e){ out=null; how = e&&e.code==="not_granted" ? "AI 사용이 허용되지 않아 서식 초안" : "AI 응답 오류로 서식 초안"; }
+  }
+  if(!out||typeof out!=="object"||!Array.isArray(out.항목)){ out=templateReport(F); if(!how) how="서식 초안(AI 미연결)"; }
+  $("oRpt").textContent = renderRpt(out,F) + `\n\n출처: 한국사회보장정보원 사회복지시설정보 OpenAPI(${F.기준일} 조회), 보건복지부 2025 장애인복지시설 일람표(2024.12), 시군구별 등록장애인 현황(2025), 2025 국민기초생활보장 사업안내`;
+  $("oRptState").textContent = how+" · 담당자 확인 필요"; $("oRptBtn").disabled=false;
+};
+$("oCopyBtn").onclick = async ()=>{ try{ await navigator.clipboard.writeText($("oRpt").textContent); $("oRptState").textContent="복사했습니다."; }catch(e){ $("oRptState").textContent="복사가 막혀 있어 직접 선택해 복사해 주세요."; } };
+if(AP){ $("kAsof").textContent=asofTxt; $("kGap24").textContent=noShort.length+"곳"; $("kGap26").textContent=noShort26.length+"곳"; }
+
+if(window.BATON_API && typeof noShort26!=="undefined") $("hkGap26").textContent=noShort26.length+"곳";
+
+/* ---------- 역할별 메뉴·라우팅 ---------- */
+const NAVS={
+  guardian:{name:"발달장애인 보호자",items:[["g1","돌봄 이력서"],["g2","시설 찾기"],["g3","의뢰 보내기"],["g4","진행 상황"]]},
+  facility:{name:"시설 담당자",items:[["facility","들어온 의뢰"],["fprofile","우리 시설 정보"]]},
+  official:{name:"담당 공무원",items:[["cases","의뢰 처리"],["office","관할 현황"],["radar","돌봄 공백 현황"],["funding","보조금 설계"]]}
+};
+const VIEW_ROLE={g1:"guardian",g2:"guardian",g3:"guardian",g4:"guardian",facility:"facility",fprofile:"facility",cases:"official",office:"official",radar:"official",funding:"official"};
+let ROLE=null;
+function renderNav(v){
+  if(VIEW_ROLE[v]) ROLE=VIEW_ROLE[v]; if(v==="home") ROLE=null;
+  const n=ROLE?NAVS[ROLE]:null;
+  const badge=id=> id==="facility"&&REFS.filter(r=>r.status==="미회신").length? `<i class="cnt">${REFS.filter(r=>r.status==="미회신").length}</i>` : id==="cases"&&CASES.filter(c=>c.entrusted==null).length? `<i class="cnt">${CASES.filter(c=>c.entrusted==null).length}</i>` : "";
+  $("gnb").innerHTML=(n?n.items.map(([id,l],i)=>`<a href="#${id}" data-v="${id}">${ROLE==="guardian"?`<i class="no">${i+1}</i>`:""}${l}${badge(id)}</a>`).join("")+'<span class="sep" aria-hidden="true"></span>':"")+'<a href="#evidence" data-v="evidence">자료 출처</a>';
+  $("roleSw").innerHTML=n?`<span>${n.name}</span><a href="#home">역할 바꾸기</a>`:"";
+  document.querySelectorAll("#gnb a").forEach(a=>a.setAttribute("aria-current",a.dataset.v===v?"page":"false"));
+}
+const VIEWS=["home","g1","g2","g3","g4","facility","fprofile","cases","office","radar","funding","evidence"];
+function route(){const h=location.hash.replace("#",""); const v=h==="parent"?"g1":VIEWS.includes(h)?h:"home";
+  VIEWS.forEach(x=>$("v-"+x).classList.toggle("on",x===v));
+  renderNav(v);
+  if(v==="g2") renderPath(); if(v==="g3") renderLetter(); if(v==="g4") renderStatus();
+  if(v==="facility") renderInbox(); if(v==="fprofile") renderFprofile(); if(v==="cases") renderCases();
+  if(v==="radar") renderRadar(); if(v==="office") renderOffice(); if(v==="funding"){drawTier();}
+  window.scrollTo(0,0);}
+window.addEventListener("hashchange",route);
+renderPath(); pickFac(); route();
+</script>
+</body>
+</html>

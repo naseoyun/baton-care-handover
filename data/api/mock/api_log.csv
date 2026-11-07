@@ -1,0 +1,8 @@
+﻿op,params,items,total
+getFcltKindCodeInfoInqire,"{""pageNo"": 1, ""numOfRows"": 100}",3,3
+getFcltListInfoInqire,"{""pageNo"": 1, ""numOfRows"": 100, ""fcltKindCd"": ""EX0001""}",2,2
+getFcltListInfoInqire,"{""pageNo"": 1, ""numOfRows"": 100, ""fcltKindCd"": ""EX0002""}",2,2
+getFcltByJoInfo,"{""pageNo"": 1, ""numOfRows"": 100, ""fcltCd"": ""Z0001"", ""srvInstId"": ""C0000000000""}",1,1
+getFcltByJoInfo,"{""pageNo"": 1, ""numOfRows"": 100, ""fcltCd"": ""Z0002"", ""srvInstId"": ""C0000000001""}",1,1
+getFcltByBassInfoInqire,"{""pageNo"": 1, ""numOfRows"": 10, ""fcltCd"": ""Z0001"", ""srvInstId"": ""C0000000000""}",1,1
+getFcltByBassInfoInqire,"{""pageNo"": 1, ""numOfRows"": 10, ""fcltCd"": ""Z0002"", ""srvInstId"": ""C0000000001""}",1,1

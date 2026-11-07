@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 모의 실행용 예시 응답. 형식은 OpenAPI 활용가이드(OA_DV_0401) 예시를 따랐고 값은 실제 코드가 아닙니다. -->
+<response><header><resultCode>00</resultCode><resultMsg>NORMAL SERVICE.</resultMsg></header>
+<body><items>
+<item><fcltKindCd>090110</fcltKindCd><sysDvsnCd>MF</sysDvsnCd><fcltUseRcpnNm>한부모가족</fcltUseRcpnNm><fcltKindNm>한부모가족복지시설</fcltKindNm><fcltDtlKindNm>모자일시보호시설</fcltDtlKindNm><sggRptYn>Y</sggRptYn><fcltTyDvsn>L</fcltTyDvsn><acntStdAccCdDvsn>ZA001</acntStdAccCdDvsn></item>
+<item><fcltKindCd>EX0001</fcltKindCd><sysDvsnCd>MF</sysDvsnCd><fcltUseRcpnNm>장애인</fcltUseRcpnNm><fcltKindNm>[예시] 장애인복지시설</fcltKindNm><fcltDtlKindNm>[예시] 중증장애인거주시설</fcltDtlKindNm><sggRptYn>Y</sggRptYn><fcltTyDvsn>L</fcltTyDvsn><acntStdAccCdDvsn>ZA001</acntStdAccCdDvsn></item>
+<item><fcltKindCd>EX0002</fcltKindCd><sysDvsnCd>MF</sysDvsnCd><fcltUseRcpnNm>장애인</fcltUseRcpnNm><fcltKindNm>[예시] 장애인복지시설</fcltKindNm><fcltDtlKindNm>[예시] 장애인단기거주시설</fcltDtlKindNm><sggRptYn>Y</sggRptYn><fcltTyDvsn>L</fcltTyDvsn><acntStdAccCdDvsn>ZA001</acntStdAccCdDvsn></item>
+</items><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>3</totalCount></body></response>

@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    { "name": "1. 전체 실행(전처리+시각화+노트북)", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/src/run_all.py", "cwd": "${workspaceFolder}", "console": "integratedTerminal" },
+    { "name": "2. 빠르게 다시 실행(PDF 건너뛰기)", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/src/run_all.py", "args": ["--skip-pdf"], "cwd": "${workspaceFolder}", "console": "integratedTerminal" },
+    { "name": "3. OpenAPI 수집(실제 호출, 시험 50곳)", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/src/fetch_facility_api.py", "args": ["--limit", "50"], "cwd": "${workspaceFolder}", "console": "integratedTerminal" },
+    { "name": "4. OpenAPI 수집(전체)", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/src/fetch_facility_api.py", "cwd": "${workspaceFolder}", "console": "integratedTerminal" },
+    { "name": "5. OpenAPI 모의 실행(인터넷 불필요)", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/src/fetch_facility_api.py", "args": ["--mock", "--basic"], "cwd": "${workspaceFolder}", "console": "integratedTerminal" },
+    { "name": "6. API ↔ 일람표 매칭", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/src/match_api_to_ilam.py", "cwd": "${workspaceFolder}", "console": "integratedTerminal" }
+  ]
+}

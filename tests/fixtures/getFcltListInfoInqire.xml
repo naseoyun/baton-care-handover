@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 모의 실행용 예시 응답(값은 가상) -->
+<response><header><resultCode>00</resultCode><resultMsg>NORMAL SERVICE.</resultMsg></header>
+<body><items>
+<item><cfbNm>사회복지</cfbNm><fcltBldgMngtNo>0000000000000000000000000</fcltBldgMngtNo><fcltCd>Z0001</fcltCd><fcltKindCd>EX0001</fcltKindCd><fcltKindNm>[예시] 장애인복지시설</fcltKindNm><fcltNm>[예시]바톤거주시설</fcltNm><jrsdSggCd>1100000000</jrsdSggCd><jrsdSggNm>서울특별시 예시구</jrsdSggNm><rprsNm>홍길동</rprsNm><srvInstId>C0000000000</srvInstId></item>
+<item><cfbNm>사회복지</cfbNm><fcltBldgMngtNo>0000000000000000000000001</fcltBldgMngtNo><fcltCd>Z0002</fcltCd><fcltKindCd>EX0001</fcltKindCd><fcltKindNm>[예시] 장애인복지시설</fcltKindNm><fcltNm>[예시]이음단기보호</fcltNm><jrsdSggCd>4100000000</jrsdSggCd><jrsdSggNm>경기도 예시시</jrsdSggNm><rprsNm>홍길순</rprsNm><srvInstId>C0000000001</srvInstId></item>
+</items><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>2</totalCount></body></response>

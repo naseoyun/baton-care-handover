@@ -1,0 +1,4 @@
+﻿fcltKindCd,sysDvsnCd,fcltUseRcpnNm,fcltKindNm,fcltDtlKindNm,sggRptYn,fcltTyDvsn,acntStdAccCdDvsn,장애인관련,바톤단계
+090110,MF,한부모가족,한부모가족복지시설,모자일시보호시설,Y,L,ZA001,False,기타
+EX0001,MF,장애인,[예시] 장애인복지시설,[예시] 중증장애인거주시설,Y,L,ZA001,True,장기거주
+EX0002,MF,장애인,[예시] 장애인복지시설,[예시] 장애인단기거주시설,Y,L,ZA001,True,단기거주

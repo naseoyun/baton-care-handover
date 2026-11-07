@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 모의 실행용 예시 응답(값은 가상) -->
+<response><header><resultCode>00</resultCode><resultMsg>NORMAL SERVICE.</resultMsg></header>
+<body><items>
+<item><fcltCd>Z0001</fcltCd><fcltNm>[예시]바톤거주시설</fcltNm><fcltAddr>서울특별시 예시구 예시로</fcltAddr><fcltDtl_1Addr>1</fcltDtl_1Addr><fcltTelNo>02-000-0000</fcltTelNo><estbDe>20100101</estbDe><cprNm>[예시]복지재단</cprNm><fcltKindCd>EX0001</fcltKindCd><jrsdSggCd>1100000000</jrsdSggCd></item>
+</items><numOfRows>10</numOfRows><pageNo>1</pageNo><totalCount>1</totalCount></body></response>

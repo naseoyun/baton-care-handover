@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 모의 실행용 예시 응답(값은 가상) -->
+<response><header><resultCode>00</resultCode><resultMsg>NORMAL SERVICE.</resultMsg></header>
+<body><items>
+<item><fcltCd>Z0001</fcltCd><seq>1</seq><title>[예시] 생활재활교사 채용 공고</title><useYn>Y</useYn><rcrtFld>서비스</rcrtFld><relateJssfc>생활재활교사</relateJssfc><recruitNops>2</recruitNops><accpBgnDe>20261101</accpBgnDe><accpClseDe>20261120</accpClseDe><wrkStle>교대근무</wrkStle><progrsSittn>Y</progrsSittn><rcptCloseTpCd>1</rcptCloseTpCd><fcltNm>[예시]바톤거주시설</fcltNm><wrkPrargRegn>예시구</wrkPrargRegn></item>
+</items><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>1</totalCount></body></response>

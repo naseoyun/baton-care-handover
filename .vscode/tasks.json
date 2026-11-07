@@ -1,0 +1,18 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "처음 한 번: 가상환경 만들고 패키지 설치", "type": "shell",
+      "windows": { "command": "python -m venv .venv; .\\.venv\\Scripts\\python -m pip install -r requirements.txt" },
+      "osx": { "command": "python3 -m venv .venv && ./.venv/bin/pip install -r requirements.txt" },
+      "linux": { "command": "python3 -m venv .venv && ./.venv/bin/pip install -r requirements.txt" },
+      "problemMatcher": [] },
+    { "label": "전체 실행", "type": "shell",
+      "windows": { "command": ".\\.venv\\Scripts\\python src\\run_all.py" },
+      "osx": { "command": "./.venv/bin/python src/run_all.py" }, "linux": { "command": "./.venv/bin/python src/run_all.py" },
+      "group": { "kind": "build", "isDefault": true }, "problemMatcher": [] },
+    { "label": "OpenAPI 수집(전체) 후 매칭", "type": "shell",
+      "windows": { "command": ".\\.venv\\Scripts\\python src\\run_all.py --skip-pdf --api" },
+      "osx": { "command": "./.venv/bin/python src/run_all.py --skip-pdf --api" }, "linux": { "command": "./.venv/bin/python src/run_all.py --skip-pdf --api" },
+      "problemMatcher": [] }
+  ]
+}
