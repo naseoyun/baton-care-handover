@@ -131,6 +131,9 @@ select{height:48px}
 input:hover,select:hover,textarea:hover{border-color:var(--ink2)}
 textarea{min-height:200px;resize:vertical;line-height:1.65}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.card.alertc{box-shadow:inset 4px 0 0 var(--bad)}
+.altbtn{display:block;width:100%;text-align:left;margin-top:6px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--p50);background:var(--p50);color:#fff;height:48px;padding:0 20px;border-radius:6px;cursor:pointer;font-weight:700;font-size:16px}
 .btn:hover{background:var(--p60);border-color:var(--p60)}
 .btn.ghost{background:#fff;color:var(--p60);border-color:var(--p60)}
@@ -504,6 +507,17 @@ body[data-role="guardian"] .track{grid-template-columns:1fr}
     <div class="path" id="path"></div>
     <p class="src" style="margin-top:8px">거주시설·주간이용시설: 2025 장애인복지시설 일람표(2024.12 기준), 시설의 소관 시군구 기준. 최중증 통합돌봄: 한국장애인개발원 디딤돌 2025 가을호(만 18~64세, 최대 3년 이용).</p>
   </div>
+  <div class="card" id="costCard">
+    <h2>비용과 수급 자격 먼저 보기</h2>
+    <p class="sub">의뢰 전에 감당할 수 있는 시설인지 확인합니다. 결과는 안내용이며, 수급 자격은 시군구 조사로 확정됩니다.</p>
+    <div class="row3" style="margin-top:10px">
+      <label class="f">수급 상태<select id="cStat"><option value="unk">모름</option><option value="yes">생계·의료급여 수급 중</option><option value="no">수급자 아님</option></select></label>
+      <label class="f">자녀 본인 월 소득인정액(만원)<input id="cInc" type="number" min="0" step="1" placeholder="예: 40"></label>
+      <label class="f">월 부담 가능 금액(만원)<input id="cBud" type="number" min="0" step="1" placeholder="비워 두면 제한 없음"></label>
+    </div>
+    <div class="note" id="costOut"></div>
+    <p class="src" style="margin-top:8px">기준: 2025 기준 중위소득 1인 2,392,013원의 40%(956,805원) 이하이면 보장시설 수급자 선정 대상(337쪽), 보장시설 수급자는 별도 가구로 보장(324쪽). 비수급자 이용료는 시설이 ‘우리 시설 정보’에 등록한 금액을 표시합니다.</p>
+  </div>
   <div class="card">
     <div class="btns" style="justify-content:space-between">
       <div><h2>추천 시설</h2><p class="sub" id="facSub" style="margin:0"></p></div>
@@ -575,6 +589,7 @@ body[data-role="guardian"] .track{grid-template-columns:1fr}
       <h2>우리 시설이 대응할 수 있는 돌봄</h2>
       <p class="sub">보호자의 돌봄 이력서 항목과 같은 말로 등록합니다. 등록한 항목이 이력서와 맞으면 추천 순위가 올라갑니다.</p>
       <div class="caps" id="fpCaps"></div>
+      <label class="f" style="margin-top:14px;max-width:260px">비수급자 월 본인부담(만원)<input id="fpFee" type="number" min="0" step="1" placeholder="미등록"></label>
       <div class="btns" style="margin-top:14px"><button class="btn" id="fpSave" type="button">등록하기</button><span class="src" id="fpState"></span></div>
     </div>
   </div>
@@ -584,7 +599,7 @@ body[data-role="guardian"] .track{grid-template-columns:1fr}
 <!-- ================= 공무원: 의뢰 처리 ================= -->
 <section class="view" id="v-cases">
 <div class="phead"><div class="in"><div class="crumb"><a href="#home">홈</a><span>담당 공무원</span><span>의뢰 처리</span></div><h1>의뢰 처리</h1><p>보호자의 의뢰서와 시설의 사전 회신을 한 화면에서 보고, 자격을 검토해 위탁을 결정합니다.</p></div></div>
-<div class="wrap"><div id="cases"></div></div>
+<div class="wrap"><div class="btns" style="margin-bottom:12px"><button class="btn ghost sm" id="demoRej" type="button">시연: 반복 거절 사례 불러오기</button><span class="src">시설 5곳이 모두 거절한 가상 사례를 만들어 자동 알림을 보여 줍니다.</span></div><div id="cases"></div></div>
 </section>
 
 <!-- ================= 정부: 레이더 ================= -->
@@ -923,6 +938,32 @@ function score(f,s,g){
   if(m.length){sc+=m.length;why.push(`대응 가능 ${m.length}개 일치`)}
   return {sc,why};
 }
+/* ---------- 비용·수급 자격 사전 안내 ---------- */
+const MED1=2392013, SEL_LINE=Math.round(MED1*0.4); // 2025 기준 중위소득 1인, 보장시설 수급자 선정기준 40%
+const FEE={};            // 시설이 등록한 비수급자 월 본인부담(만원)
+const GUAR_TYPES=["중증","지적"];   // 장기 거주시설(보장시설). 단기거주·공동생활가정은 보장시설 아님(320쪽)
+function costInfo(){
+  const st=$("cStat").value, inc=$("cInc").value===""?null:+$("cInc").value, bud=$("cBud").value===""?null:+$("cBud").value;
+  const elig = st==="yes" ? "yes" : inc!=null ? (inc*10000<=SEL_LINE ? "likely" : "no") : (st==="no" ? "no" : "unk");
+  return {st,inc,bud,elig};
+}
+function facCost(f,ci){
+  if((ci.elig==="yes"||ci.elig==="likely") && GUAR_TYPES.includes(f.type)) return {txt:"수급자: 보장시설 본인부담 없음(시군구 확인)",cls:"ok",over:false};
+  const fee=FEE[f.i];
+  if(fee==null) return {txt: GUAR_TYPES.includes(f.type)?"비수급 이용료 미등록(시설 확인)":"보장시설 아님 · 이용료 미등록",cls:"",over:false};
+  const over = ci.bud!=null && fee>ci.bud;
+  return {txt:`월 본인부담 ${fee}만원${over?" · 부담 초과":""}`,cls:over?"bad":"ok",over};
+}
+function costText(ci){
+  const line=SEL_LINE.toLocaleString("ko-KR");
+  if(ci.elig==="yes") return `<b>수급자</b>로 장기 거주시설(보장시설)에 들어가면 생계급여가 시설로 지급되어 본인부담이 없습니다. 단기거주시설·공동생활가정은 보장시설이 아니어서 이용료를 확인해야 합니다.`;
+  if(ci.elig==="likely") return `소득인정액 ${ci.inc}만원은 선정기준 ${line}원 이하로, <b>보장시설 수급자 선정 대상일 가능성</b>이 높습니다. 주민센터 신청 시 수급 자격 검토를 함께 요청하세요.`;
+  if(ci.elig==="no") return `<b>비수급 이용</b> 대상입니다(선정기준 ${line}원 초과 또는 수급자 아님). 시설별 월 본인부담을 확인하고${ci.bud!=null?`, 부담 가능 금액 ${ci.bud}만원을 넘는 시설은 의뢰 대상에서 제외합니다.`:", 부담 가능 금액을 넣으면 넘는 시설을 걸러 줍니다."}`;
+  return `수급 상태나 소득인정액을 넣으면 예상 비용을 안내합니다. 자녀는 보장시설 입소 시 별도 가구로 보므로 <b>자녀 본인</b>의 소득으로 판단합니다.`;
+}
+function renderCostOut(){ $("costOut").innerHTML=costText(costInfo()); }
+["cStat","cInc","cBud"].forEach(id=>["input","change"].forEach(ev=>$(id).addEventListener(ev,()=>{renderCostOut(); [...SEL].forEach(i=>{if(facCost(FAC[i],costInfo()).over) SEL.delete(i)}); renderFacs(); renderLetter();})));
+
 function renderFacs(){
   const s=$("selSido").value, g=$("selSgg").value, ts=typesFor(need());
   let c = FAC.filter(f=>ts.includes(f.type) && f.sido===s);
@@ -934,6 +975,7 @@ function renderFacs(){
   $("facs").innerHTML = c.map(({f,sc,why})=>{
     const v=f.cap-f.cur, sr=f.scap?Math.round(f.scur/f.scap*100):0;
     const far = f.loc && f.loc!==f.sido;
+    const cost = facCost(f,costInfo());
     return `<div class="fac ${SEL.has(f.i)?"sel":""}">
       <div><div class="nm">${esc(nm(f.i))}</div>
         <div class="meta">${TYPE_NAME[f.type]} · 소관 ${esc(f.sido)} ${esc(f.sgg)} · ${esc(f.addr)}${f.year?` · ${f.year}년 신고`:""}</div>
@@ -943,9 +985,10 @@ function renderFacs(){
           ${far?`<span class="pill warn">소재지 ${esc(f.loc)}</span>`:""}
           ${(()=>{const a=(window.BATON_APIFAC||{})[f.i]; return a?`<span class="pill ok">2026 API 목록 확인</span>${a.act?`<span class="pill warn">채용 중 공고 ${a.act}건</span>`:""}`:(window.BATON_API?`<span class="pill">2026 API에서 이름 미확인</span>`:"")})()}
           ${why.map(w=>`<span class="pill acc">${w}</span>`).join("")}
+          <span class="pill ${cost.cls}">${esc(cost.txt)}</span>
           ${(FPROF[f.i]||[]).length?`<span class="pill">시설 등록: ${FPROF[f.i].map(capName).join(", ")}</span>`:""}
         </div></div>
-      <div class="score"><b>${sc}점</b><button class="btn sm ${SEL.has(f.i)?"":"ghost"}" style="margin-top:6px" data-pick="${f.i}" type="button">${SEL.has(f.i)?"선택됨":"의뢰 대상"}</button></div>
+      <div class="score"><b>${sc}점</b><button class="btn sm ${SEL.has(f.i)?"":"ghost"}" style="margin-top:6px" data-pick="${f.i}" type="button" ${cost.over?"disabled":""}>${cost.over?"부담 초과":SEL.has(f.i)?"선택됨":"의뢰 대상"}</button></div>
     </div>`}).join("");
   $("selCount").textContent = SEL.size?`${SEL.size}곳 선택: ${[...SEL].map(i=>nm(i)).join(", ")}`:"아직 고른 시설이 없습니다. 최대 3곳까지 고를 수 있습니다.";
   document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{const i=+b.dataset.pick; if(SEL.has(i))SEL.delete(i); else if(SEL.size<3)SEL.add(i); renderFacs(); renderLetter();});
@@ -1025,13 +1068,14 @@ $("sendBtn").onclick=()=>{
   const c={id:CASES.length+1,resume:RESUME,who:RESUME.요약||"돌봄 이력서",from:s+" "+g,need:need(),picks:[...SEL],checks:{q:false,g:false,h:false},entrusted:null,admitted:false,log:[],at:stamp()};
   c.refs=c.picks.map(fi=>{const r={id:REFS.length+1,fac:fi,caseId:c.id,status:"미회신",reasons:[]}; REFS.push(r); return r;});
   logC(c,"보호자",`의뢰서 제출: 시설 ${c.picks.length}곳과 ${c.from} 주민센터에 동시 전달`);
+  const ci=costInfo(); c.cost=ci; logC(c,"보호자",`비용 확인: ${{yes:"수급자",likely:"수급 자격 검토 요청",no:"비수급 이용",unk:"미확인"}[ci.elig]}${ci.bud!=null?` · 월 부담 가능 ${ci.bud}만원`:""}`);
   CASES.push(c); SEL.clear(); renderFacs(); renderLetter(); renderRefStats();
   location.hash="g4";
 };
 
 /* 보호자: 진행 상황 */
 function renderStatus(){
-  const c=CASES.at(-1);
+  const c=[...CASES].reverse().find(x=>!/시연용/.test(x.who))||CASES.at(-1);
   if(!c){$("gStatus").innerHTML='<div class="card"><div class="empty">아직 보낸 의뢰가 없습니다. <a href="#g1">돌봄 이력서</a>를 만들고 시설을 골라 보내 보세요.</div></div>';return;}
   const rep=c.refs.filter(r=>r.status!=="미회신").length, nchk=Object.values(c.checks).filter(Boolean).length, ent=c.entrusted!=null?FAC[c.entrusted]:null;
   const st=(t,d,state)=>`<div class="tstep ${state}"><b>${t}</b><span>${d}</span></div>`;
@@ -1051,6 +1095,16 @@ function renderStatus(){
     <div class="card"><h2>시설 회신</h2><div class="tablewrap"><table><tr><th>시설</th><th>회신</th><th>사유</th></tr>${c.refs.map(r=>{const f=FAC[r.fac];return `<tr${c.entrusted===r.fac?' class="hl"':""}><td>${esc(nm(f.i))}<div class="src">${esc(f.sgg)} · ${TYPE_NAME[f.type]}</div></td><td><span class="pill ${ST_CLS[r.status]}">${ST_LABEL[r.status]}</span></td><td>${r.reasons.map(esc).join(", ")||"<span class='src'>—</span>"}</td></tr>`}).join("")}</table></div></div>
     <div class="card"><h2>처리 기록</h2><ol class="logl">${c.log.slice().reverse().map(x=>`<li><span class="src">${x.at}</span><b>${x.actor}</b><span>${esc(x.text)}</span></li>`).join("")}</ol></div>
   </div>`;
+  $("gStatus").insertAdjacentHTML("afterbegin",statusExtra(c));
+}
+
+function statusExtra(c){
+  const g=refusalGroups().find(x=>x.cases.includes(c)); if(!g||!g.rej.length) return "";
+  const done=ALERT_DONE[g.key];
+  const msg = g.rej.length>=ALERT_N
+    ? (done?`시군구 담당자가 대안을 정했습니다: <b>${esc(ALT.find(a=>a[0]===done)[1])}</b>`:`거절이 ${g.rej.length}회 쌓여 <b>시군구 담당자에게 자동으로 알렸습니다.</b> 담당자가 긴급돌봄 연계, 인근 시군구 의뢰, 인력 지원 조건부 수용 중에서 대안을 정합니다.`)
+    : `지금까지 거절 ${g.rej.length}회. 다른 시설에 더 보낼 수 있고, ${ALERT_N}회가 되면 시군구 담당자에게 자동으로 알립니다.`;
+  return `<div class="note ${done?"okn":""}" style="margin-bottom:12px">${msg} <a class="btn sm ghost" href="#g2" style="margin-left:8px">다른 시설 골라 다시 보내기</a></div>`;
 }
 
 /* 이력서 HTML(보호자·시설·시군구 공용) */
@@ -1106,17 +1160,28 @@ function renderFprofile(){
   $("fpPublic").innerHTML=`<div class="kv"><span>시설 유형</span><span>${TYPE_NAME[f.type]}</span><span>소관</span><span>${esc(f.sido)} ${esc(f.sgg)}</span><span>주소</span><span>${esc(f.addr)}</span><span>정원·현원</span><span>${f.cap}명 · ${f.cur}명 <span class="pill ${v>0?"ok":""}">빈자리 ${Math.max(0,v)}</span></span><span>종사자</span><span>${f.scur}/${f.scap}명 (${sr}%)</span><span>2026 목록</span><span>${a?`사회복지시설정보 API 확인${a.act?` · 채용 중 공고 ${a.act}건`:""}`:"API에서 이름으로 확인되지 않음"}</span></div><p class="src" style="margin-top:10px">정원·현원·종사자: 2025 장애인복지시설 일람표(2024.12 기준). 공공데이터에는 도전행동 대응, 야간 인력, 1인실 같은 정보가 없습니다.</p>`;
   const cur=FPROF[f.i]||[];
   $("fpCaps").innerHTML=CAPS.map(([k,l])=>`<label class="check capitem"><input type="checkbox" value="${k}" ${cur.includes(k)?"checked":""}> ${l}</label>`).join("");
+  $("fpFee").value = FEE[f.i]!=null ? FEE[f.i] : "";
   $("fpState").textContent=cur.length?`등록됨: ${cur.map(capName).join(", ")}`:"";
 }
 $("fpSido").onchange=()=>{fillFp(); renderFprofile();}; $("fpFac").onchange=renderFprofile;
-$("fpSave").onclick=()=>{const fi=+$("fpFac").value; FPROF[fi]=[...document.querySelectorAll("#fpCaps input:checked")].map(x=>x.value); $("fpState").textContent=FPROF[fi].length?`등록했습니다. 보호자의 시설 찾기에 반영됩니다.`:"등록한 항목이 없습니다."; renderFacs();};
+$("fpSave").onclick=()=>{const fi=+$("fpFac").value; const fv=$("fpFee").value; if(fv==="") delete FEE[fi]; else FEE[fi]=+fv; FPROF[fi]=[...document.querySelectorAll("#fpCaps input:checked")].map(x=>x.value); $("fpState").textContent=(FPROF[fi].length||FEE[fi]!=null)?`등록했습니다${FEE[fi]!=null?` (비수급자 월 본인부담 ${FEE[fi]}만원)`:""}. 보호자의 시설 찾기에 반영됩니다.`:"등록한 항목이 없습니다."; renderFacs();};
 
 /* 공무원: 의뢰 처리 */
+$("demoRej").onclick=()=>{
+  const r0=JSON.parse(JSON.stringify(RESUME||ruleResume($("story").value)));   // 별도 대상자로 취급
+  const pool=FAC.filter(f=>f.sido==="경기"&&GUAR_TYPES.includes(f.type)&&f.cap>f.cur&&!REFS.some(r=>r.fac===f.i)).slice(0,ALERT_N);
+  const RS=[["종사자 부족","도전행동 대응 어려움"],["정원 없음"],["도전행동 대응 어려움"],["종사자 부족"],["의료 처치 불가"]];
+  const c={id:CASES.length+1,resume:r0,who:(r0.요약||"돌봄 이력서")+" (시연용 가상 사례)",from:"경기 용인시",need:"long",picks:pool.map(f=>f.i),checks:{q:false,g:false,h:false},entrusted:null,admitted:false,log:[],at:stamp()};
+  c.refs=pool.map((f,i)=>{const r={id:REFS.length+1,fac:f.i,caseId:c.id,status:"거절",reasons:RS[i%RS.length]}; REFS.push(r); return r;});
+  logC(c,"보호자",`시연용 가상 사례: 시설 ${pool.length}곳에 의뢰, 모두 거절`);
+  CASES.push(c); renderRefStats(); renderCases();
+};
 const CHECKS=[["q","보장시설 수급자 선정 검토","기준 중위소득 40% 이하로 선정된 사람에게 보장시설 생계급여가 나갑니다. 입소만으로는 자격이 생기지 않습니다(337·333쪽)."],["g","후견·급여관리 확인","의사무능력자는 후견인 지정을 우선 검토하고, 어려우면 급여관리자를 지정합니다(283쪽)."],["h","가구 분리·주민등록 안내","보장시설 수급자는 별도 가구로 보장하고 주민등록을 변경합니다(324쪽)."]];
 const PICK={};
 function renderCases(){
   if(!CASES.length){$("cases").innerHTML='<div class="card"><div class="empty">접수된 의뢰가 없습니다. 보호자 화면에서 의뢰를 보내면 여기로 들어옵니다.</div></div>';return;}
-  $("cases").innerHTML=CASES.slice().reverse().map(c=>{
+  checkAlerts();
+  $("cases").innerHTML=alertHTML()+CASES.slice().reverse().map(c=>{
     const [sl,sc]=caseState(c), ok=c.refs.filter(r=>r.status==="수용"), all=Object.values(c.checks).every(Boolean);
     const ent=c.entrusted!=null?FAC[c.entrusted]:null, pick=PICK[c.id]??(ok[0]?ok[0].fac:null);
     const nonGuar=ent&&["단기","공동"].includes(ent.type);
@@ -1136,13 +1201,44 @@ function renderCases(){
         </div>
       </div>
     </div>`}).join("");
+  document.querySelectorAll("[data-alt]").forEach(b=>b.onclick=()=>{const [k,a]=b.dataset.alt.split(":"); ALERT_DONE[+k]=a; const g=refusalGroups().find(x=>x.key===+k); g.cases.forEach(c=>logC(c,"시군구",`반복 거절 대응: ${ALT.find(z=>z[0]===a)[1]}`)); renderCases();});
   document.querySelectorAll("[data-ck]").forEach(x=>x.onchange=()=>{const [id,k]=x.dataset.ck.split(":"); const c=CASES.find(c=>c.id===+id); c.checks[k]=x.checked; if(x.checked) logC(c,"시군구",`${CHECKS.find(z=>z[0]===k)[1]} 확인`); renderCases();});
   document.querySelectorAll("[data-pk]").forEach(x=>x.onchange=()=>{const [id,fi]=x.dataset.pk.split(":"); PICK[+id]=+fi;});
   document.querySelectorAll("[data-ent]").forEach(b=>b.onclick=()=>{const c=CASES.find(c=>c.id===+b.dataset.ent); const ok=c.refs.filter(r=>r.status==="수용"); const fi=PICK[c.id]??ok[0].fac; c.entrusted=fi; logC(c,"시군구",`${nm(fi)}에 위탁 결정 통보`); renderCases();});
   if(typeof renderNav==="function") renderNav("cases");
 }
 
+/* ---------- 반복 거절 안전망 ---------- */
+const ALERT_N=5;               // 같은 대상자의 거절이 이 횟수 이상이면 시군구에 자동 알림
+const ALERT_DONE={}, ALERT_SENT=new Set();
+const ALT=[["care","긴급돌봄·최중증 통합돌봄 연계","거절이 이어지는 동안 돌봄이 끊기지 않도록 긴급돌봄과 최중증 통합돌봄을 먼저 연결"],
+           ["near","인근 시군구 시설 의뢰","관할 밖 시설까지 넓혀 다시 의뢰(시도 담당과 협의)"],
+           ["staff","인력 지원 조건부 수용 협의","'종사자 부족'·'도전행동 대응 어려움'으로 거절한 시설과 인력 지원을 조건으로 수용 협의"]];
+function refusalGroups(){   // 같은 이력서(같은 대상자)로 보낸 의뢰를 묶어 거절 수를 셈
+  const g={};
+  CASES.forEach(c=>{const k=CASES.find(x=>x.resume===c.resume).id; (g[k]=g[k]||{key:k,cases:[],refs:[]}); g[k].cases.push(c); g[k].refs.push(...c.refs);});
+  return Object.values(g).map(x=>({...x,rej:x.refs.filter(r=>r.status==="거절")}));
+}
+const alertGroups=()=>refusalGroups().filter(x=>x.rej.length>=ALERT_N);
+function checkAlerts(){
+  alertGroups().forEach(g=>{ if(ALERT_SENT.has(g.key)) return; ALERT_SENT.add(g.key);
+    g.cases.forEach(c=>logC(c,"시스템",`거절 ${g.rej.length}회: 시군구 담당자에게 자동 알림`)); });
+}
+function alertHTML(){
+  return alertGroups().map(g=>{
+    const rs={}; g.rej.forEach(r=>r.reasons.forEach(x=>rs[x]=(rs[x]||0)+1));
+    const last=g.cases.at(-1), done=ALERT_DONE[g.key];
+    return `<div class="card alertc">
+      <div class="btns" style="justify-content:space-between"><h2>반복 거절 알림 · 의뢰 #${g.cases.map(c=>c.id).join(", #")}</h2><span class="pill bad">거절 ${g.rej.length}회</span></div>
+      <p class="sub">${esc(last.from)} · ${esc(last.who)} — 거절이 ${ALERT_N}회 이상 쌓여 자동으로 알렸습니다. 거절 사유를 보고 대안을 고르세요.</p>
+      <div class="btns" style="margin:6px 0 4px">${Object.entries(rs).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="pill">${esc(k)} ${v}</span>`).join("")||'<span class="src">사유 미선택</span>'}</div>
+      ${done?`<div class="note okn">선택한 대안: <b>${esc(ALT.find(a=>a[0]===done)[1])}</b> · 보호자 화면과 처리 기록에 남겼습니다.</div>`
+        :ALT.map(([k,t,d])=>`<button class="btn ghost altbtn" data-alt="${g.key}:${k}" type="button"><b>${t}</b> <span class="src">${d}</span></button>`).join("")}
+    </div>`}).join("");
+}
+
 function renderRefStats(){
+  checkAlerts();
   if(!REFS.length){$("refStats").innerHTML='<div class="empty">아직 의뢰 기록이 없습니다. 부모 화면에서 의뢰를 보내고 시설 화면에서 회신하면, 수용률과 거절 사유가 여기에 실시간으로 집계됩니다.</div>';return;}
   const st={수용:0,대기:0,거절:0,미회신:0}; const rs={}; REFS.forEach(r=>{st[r.status]++; r.reasons.forEach(x=>rs[x]=(rs[x]||0)+1)});
   const mx=Math.max(1,...Object.values(rs));
@@ -1323,6 +1419,7 @@ function reportFacts(){
     거주시설_빈자리_2024:A.linkedRes.reduce((n,f)=>n+Math.max(0,f.cap-f.cur),0),
     거주시설_종사자_결원_2024:A.linkedRes.reduce((n,f)=>n+Math.max(0,f.scap-f.scur),0),
     목록변화:{API에만:A.newOnes.length, 일람표에만:A.gone.length, API에만_예:A.newOnes.slice(0,3).map(a=>a.name), 일람표에만_예:A.gone.slice(0,3).map(x=>x.name)},
+    반복거절_알림:alertGroups().length,
     의뢰_데모기록:{건수:REFS.length, ...st, 거절사유:rs}
   };
 }
@@ -1345,6 +1442,7 @@ function templateReport(F){
   L.push(" ○ 이름으로 연결되지 않은 시설의 운영 여부 확인");
   if(F.단기거주시설_없는_시군구.length) L.push(" ○ 단기거주시설 공백 지역의 인근 시군구 긴급 의뢰처 사전 지정");
   L.push(" ○ 의뢰 회신 시 거절 사유 기록 안내(시설 대상)");
+  if(F.반복거절_알림) L.push(` ○ 반복 거절 알림 ${F.반복거절_알림}건: 거절 사유 확인 후 긴급돌봄 연계·인근 시군구 의뢰·인력 지원 조건부 수용 협의 필요`);
   if(F.의뢰_데모기록.건수) L.push("",`※ 이번 주 의뢰 ${F.의뢰_데모기록.건수}건: 수용 ${F.의뢰_데모기록.수용}, 대기 ${F.의뢰_데모기록.대기}, 거절 ${F.의뢰_데모기록.거절}(데모 기록)`);
   return L.join("\n");
 }
